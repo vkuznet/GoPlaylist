@@ -1,4 +1,4 @@
-module github.com/vkuznet/playlist
+module github.com/vkuznet/goplaylist
 
 go 1.23.3
 
