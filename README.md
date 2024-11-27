@@ -1,7 +1,7 @@
 # GoPlaylist
 
-[![Go CI build](https://github.com/dmwm/goplaylist/actions/workflows/go.yml/badge.svg)](https://github.com/dmwm/goplaylist/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dmwm/goplaylist)](https://goreportcard.com/report/github.com/dmwm/goplaylist)
+[![Go CI build](https://github.com/vkuznet/goplaylist/actions/workflows/go.yml/badge.svg)](https://github.com/vkuznet/goplaylist/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/goplaylist)](https://goreportcard.com/report/github.com/vkuznet/goplaylist)
 
 
 a simple tool to build either Spotify or Youtube playlists from provided
