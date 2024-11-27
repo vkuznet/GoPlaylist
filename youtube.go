@@ -219,7 +219,7 @@ func createPlaylist(service *youtube.Service, title string) string {
 		},
 	}
 
-	snippet := []string{"snippet.status"}
+	snippet := []string{"snippet", "status"}
 	createdPlaylist, err := service.Playlists.Insert(snippet, playlist).Do()
 	if err != nil {
 		log.Fatalf("Error creating YouTube playlist: %v", err)
