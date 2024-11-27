@@ -69,3 +69,12 @@ func callbackUrl() string {
 	url := fmt.Sprintf("http://localhost:%d/callback", Config.CallbackPort)
 	return url
 }
+
+func inList(key string, ilist []string) bool {
+	for _, k := range ilist {
+		if k == key {
+			return true
+		}
+	}
+	return false
+}

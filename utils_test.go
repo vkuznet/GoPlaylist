@@ -43,3 +43,10 @@ func TestXMLParsing(t *testing.T) {
 	}
 
 }
+func TestInUtils(t *testing.T) {
+	ilist := []string{"a", "b", "c"}
+	res := inList("c", ilist)
+	if !res {
+		t.Error("unable to find item 'a' in a list", ilist)
+	}
+}
