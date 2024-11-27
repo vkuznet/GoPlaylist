@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -53,16 +54,17 @@ func setupYouTubeService(title string, discography *Discography) {
 			if track.Orchestra != "" {
 				artist = track.Orchestra
 			}
-			//             year := strings.Split(track.Year, "-")[0]
-			//             query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
-			query := fmt.Sprintf("%s %s", track.Name, artist)
+			year := strings.Split(track.Year, "-")[0]
+			query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
 			if Config.Verbose > 0 {
 				fmt.Println("searching for", query)
 			}
 			addToYoutubePlaylist(service, playlistID, query)
 		}
-		msg := fmt.Sprintf("New playlist \"%s\" is created with ID: %s", title, playlistID)
+		purl := constructYouTubePlaylistURL(playlistID)
+		msg := fmt.Sprintf("New playlist <a href=\"%s\">%s</a> is created", purl, title)
 		log.Println(msg)
+		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(msg))
 	})
 
@@ -127,4 +129,8 @@ func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 	if err != nil {
 		log.Printf("Error adding video to playlist: %v", err)
 	}
+}
+
+func constructYouTubePlaylistURL(playlistID string) string {
+	return fmt.Sprintf("https://www.youtube.com/playlist?list=%s", playlistID)
 }

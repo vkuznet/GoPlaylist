@@ -55,8 +55,10 @@ func setupSpotifyClient(title string, discography *Discography) {
 			}
 			addToSpotifyPlaylist(client, spotifyID, query)
 		}
-		msg := fmt.Sprintf("New playlist \"%s\" is created. Spotify ID: %s", title, spotifyID)
+		purl := constructSpotifyPlaylistURL(spotifyID)
+		msg := fmt.Sprintf("New playlist <a href=\"%s\">%s</a> is created", purl, title)
 		log.Println(msg)
+		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(msg))
 	})
 
@@ -97,4 +99,8 @@ func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackNa
 	if err != nil {
 		log.Printf("Error adding track to playlist: %v", err)
 	}
+}
+
+func constructSpotifyPlaylistURL(spotifyID spotify.ID) string {
+	return fmt.Sprintf("https://open.spotify.com/playlist/%v", spotifyID)
 }
