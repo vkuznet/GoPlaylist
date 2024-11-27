@@ -66,3 +66,10 @@ Here is an example of `testplaylist.xml` file:
     <track name="Sin rumbo fijo" vocal="Ángel Vargas" year="1938-04-18" genre="vals" orchestra="Orquesta Tipica Victor"/>
 </discography>
 ```
+
+### References:
+
+- [Youtube API](https://developers.google.com/youtube/v3/getting-started)
+- [Youtube Go](https://developers.google.com/youtube/v3/quickstart/go)
+- [Google Console](https://console.cloud.google.com)
+- [Spotify Dashboard](https://developer.spotify.com/dashboard/applications)
