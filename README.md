@@ -1,4 +1,9 @@
 # GoPlaylist
+
+[![Go CI build](https://github.com/dmwm/goplaylist/actions/workflows/go-ci.yml/badge.svg)](https://github.com/dmwm/goplaylist/actions/workflows/go-ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dmwm/goplaylist)](https://goreportcard.com/report/github.com/dmwm/goplaylist)
+
+
 a simple tool to build either Spotify or Youtube playlists from provided
 XML/CSV files.
 
