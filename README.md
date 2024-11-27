@@ -1,6 +1,6 @@
 # GoPlaylist
 
-[![Go CI build](https://github.com/dmwm/goplaylist/actions/workflows/go-ci.yml/badge.svg)](https://github.com/dmwm/goplaylist/actions/workflows/go-ci.yml)
+[![Go CI build](https://github.com/dmwm/goplaylist/actions/workflows/go.yml/badge.svg)](https://github.com/dmwm/goplaylist/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dmwm/goplaylist)](https://goreportcard.com/report/github.com/dmwm/goplaylist)
 
 
