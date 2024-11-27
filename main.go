@@ -41,6 +41,5 @@ func main() {
 		setupSpotifyClient(title, discography)
 	} else {
 		setupYouTubeService(title, discography)
-		//         youtubeChannels()
 	}
 }
