@@ -41,8 +41,20 @@ func setupSpotifyClient(title string, discography *Discography) {
 			log.Fatalf("Couldn't get current user: %v", err)
 			return
 		}
-		spotifyID := createSpotifyPlaylist(client, user.ID, title)
+
+		// obtain artist either from title of discography
 		artist := getArtist(title, discography)
+
+		// check if playlist already exist, if not we will create it
+		spotifyID, err := getSpotifyPlaylistIDByName(client, title)
+		if err != nil {
+			log.Println("Unable to lookup playlist ID for", title)
+			spotifyID = createSpotifyPlaylist(client, user.ID, title)
+		}
+
+		// fetch existing tracks in our playlist
+		tracks, err := getSpotifyTracksForPlaylistID(client, spotifyID)
+
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
 				artist = track.Orchestra
@@ -53,7 +65,17 @@ func setupSpotifyClient(title string, discography *Discography) {
 			if Config.Verbose > 0 {
 				fmt.Printf("query idx: %d track: %s\n", idx, query)
 			}
-			addToSpotifyPlaylist(client, spotifyID, query)
+			if inList(track.Name, tracks) {
+				if Config.Verbose > 0 {
+					fmt.Printf("idx: %d track: %s, already exist in playlist, skipping...\n", idx, query)
+				}
+				log.Println("")
+			} else {
+				if Config.Verbose > 0 {
+					fmt.Printf("idx: %d track: %s\n", idx, query)
+				}
+				addToSpotifyPlaylist(client, spotifyID, query)
+			}
 		}
 		purl := constructSpotifyPlaylistURL(spotifyID)
 		msg := fmt.Sprintf("New playlist <a href=\"%s\">%s</a> is created", purl, title)
@@ -103,4 +125,32 @@ func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackNa
 
 func constructSpotifyPlaylistURL(spotifyID spotify.ID) string {
 	return fmt.Sprintf("https://open.spotify.com/playlist/%v", spotifyID)
+}
+
+func getSpotifyPlaylistIDByName(client *spotify.Client, playlistName string) (spotify.ID, error) {
+	searchResults, err := client.Search(context.Background(), playlistName, spotify.SearchTypePlaylist)
+	if err != nil {
+		return "", fmt.Errorf("error searching playlists: %v", err)
+	}
+
+	if searchResults.Playlists == nil || len(searchResults.Playlists.Playlists) == 0 {
+		return "", fmt.Errorf("no playlists found for name: %s", playlistName)
+	}
+
+	// Return the ID of the first playlist in the search results
+	return searchResults.Playlists.Playlists[0].ID, nil
+}
+
+func getSpotifyTracksForPlaylistID(client *spotify.Client, playlistID spotify.ID) ([]string, error) {
+	var tracks []string
+	playlist, err := client.GetPlaylist(context.Background(), playlistID)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving playlist: %v", err)
+	}
+
+	for _, item := range playlist.Tracks.Tracks {
+		tracks = append(tracks, fmt.Sprintf("%s by %s", item.Track.Name, item.Track.Artists[0].Name))
+	}
+
+	return tracks, nil
 }

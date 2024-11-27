@@ -48,18 +48,36 @@ func setupYouTubeService(title string, discography *Discography) {
 		}
 		log.Println("Youtube client successfully authenticated")
 
+		// obtain artist either from title of discography
 		artist := getArtist(title, discography)
-		playlistID := createYoutubePlaylist(service, title)
+
+		// check if playlist already exist, if not we will create it
+		playlistID, err := getYoutubePlaylistIDByName(service, title)
+		if err != nil {
+			log.Println("Unable to lookup playlist ID for", title)
+			playlistID = createYoutubePlaylist(service, title)
+		}
+
+		// fetch existing tracks in our playlist
+		tracks, err := getYoutubeTracksForPlaylistID(service, playlistID)
+
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
 				artist = track.Orchestra
 			}
 			year := strings.Split(track.Year, "-")[0]
 			query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
-			if Config.Verbose > 0 {
-				fmt.Printf("query idx: %d track: %s\n", idx, query)
+			if inList(track.Name, tracks) {
+				if Config.Verbose > 0 {
+					fmt.Printf("idx: %d track: %s, already exist in playlist, skipping...\n", idx, query)
+				}
+				log.Println("")
+			} else {
+				if Config.Verbose > 0 {
+					fmt.Printf("idx: %d track: %s\n", idx, query)
+				}
+				addToYoutubePlaylist(service, playlistID, query)
 			}
-			addToYoutubePlaylist(service, playlistID, query)
 		}
 		purl := constructYouTubePlaylistURL(playlistID)
 		msg := fmt.Sprintf("New playlist <a href=\"%s\">%s</a> is created", purl, title)
@@ -133,4 +151,52 @@ func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 
 func constructYouTubePlaylistURL(playlistID string) string {
 	return fmt.Sprintf("https://www.youtube.com/playlist?list=%s", playlistID)
+}
+
+func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (string, error) {
+	searchResp, err := service.Search.List([]string{"snippet"}).
+		Q(playlistName).
+		Type("playlist").
+		MaxResults(1).
+		Do()
+
+	if err != nil {
+		return "", fmt.Errorf("error searching playlist: %v", err)
+	}
+
+	if len(searchResp.Items) == 0 {
+		return "", fmt.Errorf("no playlists found for name: %s", playlistName)
+	}
+
+	// Return the playlist ID
+	return searchResp.Items[0].Id.PlaylistId, nil
+}
+
+func getYoutubeTracksForPlaylistID(service *youtube.Service, playlistID string) ([]string, error) {
+	var tracks []string
+	nextPageToken := ""
+
+	for {
+		playlistItemsResp, err := service.PlaylistItems.List([]string{"snippet"}).
+			PlaylistId(playlistID).
+			MaxResults(50). // Maximum allowed by YouTube API
+			PageToken(nextPageToken).
+			Do()
+
+		if err != nil {
+			return nil, fmt.Errorf("error retrieving playlist items: %v", err)
+		}
+
+		for _, item := range playlistItemsResp.Items {
+			tracks = append(tracks, fmt.Sprintf("%s (%s)", item.Snippet.Title, item.Snippet.ResourceId.VideoId))
+		}
+
+		// Check if there's another page of results
+		nextPageToken = playlistItemsResp.NextPageToken
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	return tracks, nil
 }
