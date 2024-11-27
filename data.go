@@ -10,10 +10,12 @@ import (
 )
 
 type Track struct {
-	Name      string `xml:"name,attr"`
-	Genre     string `xml:"genre,attr,omitempty"`
-	Year      string `xml:"year,attr"`
 	Orchestra string `xml:"orchestra,attr"`
+	Year      string `xml:"year,attr"`
+	Name      string `xml:"name,attr"`
+	Artist    string `xml:"artist,attr,omitempty"`
+	Genre     string `xml:"genre,attr,omitempty"`
+	Vocal     string `xml:"vocal,attr,omitempty"`
 }
 
 type Discography struct {
@@ -66,11 +68,19 @@ func readCSVFile(filename string) (*Discography, error) {
 		if len(record) < 3 {
 			continue // Skip rows with insufficient data
 		}
-		discography.Tracks = append(discography.Tracks, Track{
-			Orchestra: record[0], // Orchestra
-			Year:      record[1], // Year
-			Name:      record[2], // Track name
-		})
+		track := Track{
+			Orchestra: record[0],
+			Year:      record[1],
+			Name:      record[2],
+		}
+		if len(record) == 4 {
+			track.Artist = record[3]
+		} else if len(record) == 5 {
+			track.Genre = record[4]
+		} else if len(record) == 6 {
+			track.Vocal = record[5]
+		}
+		discography.Tracks = append(discography.Tracks, track)
 	}
 
 	if Config.Verbose > 1 {
