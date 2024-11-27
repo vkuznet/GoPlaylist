@@ -66,6 +66,12 @@ Here is an example of `testplaylist.xml` file:
     <track name="Sin rumbo fijo" vocal="Ángel Vargas" year="1938-04-18" genre="vals" orchestra="Orquesta Tipica Victor"/>
 </discography>
 ```
+And, similar example of using CSV data-format
+```
+Carlos Di Sarli,1956-09-27,A la luz del candil
+Orquesta Tipica Victor,1938-04-18,Sin rumbo fijo
+```
+
 
 ### Limitations
 You should be aware of limitations coming from Spotify/Youtube providers. Here

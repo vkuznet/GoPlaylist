@@ -13,14 +13,25 @@ var spotifyId, spotifySecret, youtubeId, youtubSecret string
 // Use the readXMLFile function
 func main() {
 	var file string
-	flag.StringVar(&file, "file", "", "xml file")
+	flag.StringVar(&file, "file", "", "xml or csv file to read")
 	var config string
 	flag.StringVar(&config, "config", "", "configuration file")
+	var showTracks bool
+	flag.BoolVar(&showTracks, "tracks", false, "show tracks and exit")
 	flag.Parse()
 
 	err := parseConfig(config)
 	if err != nil {
 		log.Fatalf("Fail to parse config file %s, error %v", config, err)
+	}
+
+	if showTracks {
+		Config.Verbose = 0
+		discography, _ := readFile(file)
+		for _, track := range discography.Tracks {
+			fmt.Printf("%+v\n", track)
+		}
+		return
 	}
 
 	title := Config.PlaylistTitle
@@ -31,7 +42,7 @@ func main() {
 	fmt.Printf("creating %s playlist: %s\n", Config.Service, title)
 
 	// read provided file
-	discography, err := readXMLFile(file)
+	discography, err := readFile(file)
 	if err != nil {
 		log.Fatalf("Error reading XML file: %v", err)
 	}
