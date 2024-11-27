@@ -43,7 +43,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 		}
 		spotifyID := createSpotifyPlaylist(client, user.ID, title)
 		artist := getArtist(title, discography)
-		for _, track := range discography.Tracks {
+		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
 				artist = track.Orchestra
 			}
@@ -51,7 +51,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 			//             query := fmt.Sprintf("track:%s year:%v artist:%s", track.Name, year, artist)
 			query := fmt.Sprintf("track:%s artist:%s", track.Name, artist)
 			if Config.Verbose > 0 {
-				fmt.Println("searching for", query)
+				fmt.Printf("query idx: %d track: %s\n", idx, query)
 			}
 			addToSpotifyPlaylist(client, spotifyID, query)
 		}

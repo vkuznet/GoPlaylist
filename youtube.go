@@ -50,14 +50,14 @@ func setupYouTubeService(title string, discography *Discography) {
 
 		artist := getArtist(title, discography)
 		playlistID := createYoutubePlaylist(service, title)
-		for _, track := range discography.Tracks {
+		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
 				artist = track.Orchestra
 			}
 			year := strings.Split(track.Year, "-")[0]
 			query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
 			if Config.Verbose > 0 {
-				fmt.Println("searching for", query)
+				fmt.Printf("query idx: %d track: %s\n", idx, query)
 			}
 			addToYoutubePlaylist(service, playlistID, query)
 		}
