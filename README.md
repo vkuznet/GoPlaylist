@@ -2,6 +2,15 @@
 a simple tool to build either Spotify or Youtube playlists from provided
 XML/CSV files.
 
+To build the tool you need [Go](https://go.dev/doc/install) language
+to be installed on your system or use pre-build static executable from
+[releases](https://github.com/vkuznet/GoPlaylist/releases) area.
+To build the executable just run
+```
+go build
+```
+
+
 ### Spotify setup
 In order to use spotify you must obtain client's credentials from
 their [developer site](https://developer.spotify.com/dashboard/applications)
@@ -38,7 +47,7 @@ To run the tool obtain your favorite playlist in XML/CSV data-format and run it
 as following:
 
 ```
-./playlist -config config.json -file=testplaylist.xml
+./goplaylist -config config.json -file=testplaylist.xml
 ...
 # it will provide you an URL to click on and you'll go through verification
 step and your playlist will be build in corresponding service
