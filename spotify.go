@@ -33,7 +33,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 		}
 
 		client = spotify.New(auth.Client(ctx, token))
-		log.Printf("Spotify client successfully authenticated: %+v", client)
+		log.Println("Spotify client successfully authenticated")
 
 		user, err := client.CurrentUser(ctx)
 		if err != nil {
@@ -44,6 +44,9 @@ func setupSpotifyClient(title string, discography *Discography) {
 		spotifyID := createSpotifyPlaylist(client, user.ID, title)
 		artist := getArtist(title, discography)
 		for _, track := range discography.Tracks {
+			if track.Orchestra != "" {
+				artist = track.Orchestra
+			}
 			//             year := strings.Split(track.Year, "-")[0]
 			//             query := fmt.Sprintf("track:%s year:%v artist:%s", track.Name, year, artist)
 			query := fmt.Sprintf("track:%s artist:%s", track.Name, artist)

@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // TestGetArtist
 func TestArtist(t *testing.T) {
@@ -15,6 +18,28 @@ func TestArtist(t *testing.T) {
 	artist = getArtist(ainput, discography)
 	if artist != "OTV" {
 		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, "OTV", artist)
+	}
+
+}
+
+func TestXMLParsing(t *testing.T) {
+	file := "testplaylist.xml"
+	discography, err := readXMLFile(file)
+	if err != nil {
+		t.Error(err)
+	}
+	artist := getArtist("bla", discography)
+	if artist != "bla" {
+		t.Errorf("wrong artist %s, discography %+v", artist, discography)
+	}
+
+	// loop over tracks to see orchestra
+	for _, track := range discography.Tracks {
+		if strings.Contains(track.Name, "Sin") {
+			if track.Orchestra != "Orquesta Tipica Victor" {
+				t.Errorf("wrong orchestra %+v", track)
+			}
+		}
 	}
 
 }

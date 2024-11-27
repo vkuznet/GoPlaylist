@@ -45,11 +45,14 @@ func setupYouTubeService(title string, discography *Discography) {
 		if err != nil {
 			log.Fatalf("Failed to create YouTube client: %v", err)
 		}
-		log.Printf("Youtube client successfully authenticated: %+v", service)
+		log.Println("Youtube client successfully authenticated")
 
 		artist := getArtist(title, discography)
 		playlistID := createYoutubePlaylist(service, title)
 		for _, track := range discography.Tracks {
+			if track.Orchestra != "" {
+				artist = track.Orchestra
+			}
 			//             year := strings.Split(track.Year, "-")[0]
 			//             query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
 			query := fmt.Sprintf("%s %s", track.Name, artist)
