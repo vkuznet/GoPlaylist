@@ -1,0 +1,84 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.20
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Build
+      run: |
+        echo "Linux builds"
+        GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_linux_arm64
+        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_linux_amd64
+        GOOS=linux GOARCH=ppc64le CGO_ENABLED=0 go build -o goplaylst_linux_power8
+        GOOS=linux GOARCH=riscv64 CGO_ENABLED=0 go build -o goplaylst_linux_riscv64
+        GOOS=linux GOARCH=s390x CGO_ENABLED=0 go build -o goplaylst_linux_s390x
+
+        echo "Freebsd builds"
+        GOOS=freebsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_freebsd_arm64
+        GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_freebsd_amd64
+
+        echo "openbsd builds"
+        GOOS=openbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_openbsd_arm64
+        GOOS=openbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_openbsd_amd64
+
+        echo "netbsd builds"
+        GOOS=netbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_netbsd_arm64
+        GOOS=netbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_netbsd_amd64
+
+        echo "Darwin builds"
+        GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_darwin_arm64
+        GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_darwin_amd64
+
+        echo "Windows builds"
+        GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_windows_arm64.exe
+        GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_windows_amd64.exe
+
+        echo "Tar ball"
+        tar cfz goplaylist.tar.gz goplaylst_linux* goplaylst_darwin* goplaylst_windows*
+
+    - name: Create Release
+      id: create_release
+      uses: ncipollo/release-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload goplaylist
+      id: upload-goplaylist
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./goplaylist.tar.gz
+        asset_name: goplaylist.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Get the Ref
+      id: get-ref
+      uses: ankitvgupta/ref-to-tag-action@master
+      with:
+        ref: ${{ github.ref }}
+        head_ref: ${{ github.head_ref }}
