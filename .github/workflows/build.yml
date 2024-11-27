@@ -67,7 +67,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         bodyFile: "LAST_CHANGES.md"
-        artifacts: "goplaylist.tar.gz"
+        artifacts: "goplaylist*"
 
     - name: Upload goplaylist
       id: upload-goplaylist
