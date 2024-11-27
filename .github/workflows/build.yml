@@ -35,11 +35,11 @@ jobs:
         GOOS=freebsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_freebsd_arm64
         GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_freebsd_amd64
 
-        echo "openbsd builds"
+        echo "Openbsd builds"
         GOOS=openbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_openbsd_arm64
         GOOS=openbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_openbsd_amd64
 
-        echo "netbsd builds"
+        echo "Netbsd builds"
         GOOS=netbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_netbsd_arm64
         GOOS=netbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_netbsd_amd64
 
@@ -54,6 +54,10 @@ jobs:
         echo "Tar ball"
         tar cfz goplaylist.tar.gz goplaylst_linux* goplaylst_darwin* goplaylst_windows*
 
+        echo "Generate RELEASE.MD and LAST_CHANGES.md"
+        ./gen_release_log.sh
+        ./extract_last_changes.sh
+
     - name: Create Release
       id: create_release
       uses: ncipollo/release-action@v1
@@ -62,6 +66,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
+        bodyFile: "LAST_CHANGES.md"
         draft: false
         prerelease: false
 
