@@ -67,6 +67,19 @@ Here is an example of `testplaylist.xml` file:
 </discography>
 ```
 
+### Limitations
+You should be aware of limitations coming from Spotify/Youtube providers. Here
+we briefly summarize them:
+
+#### Youtube limitations
+Youtube APIs are limited to 10,000 units per day per client where search query
+accounts for 100 units. Therefore, you are limited to 100 search tracks per
+single day. And, your playlist may not exceed 5,000 videos.
+
+#### Spotify limitations
+Spotify limits user to have not more than 10,000 tracks per playlist.
+
+
 ### References:
 
 - [Youtube API](https://developers.google.com/youtube/v3/getting-started)
