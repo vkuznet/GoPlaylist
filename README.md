@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/goplaylist)](https://goreportcard.com/report/github.com/vkuznet/goplaylist)
 
 
-a simple tool to build either Spotify or Youtube playlists from provided
+A simple tool to build either Spotify or Youtube playlists from provided
 XML/CSV files.
 
 To build the tool you need [Go](https://go.dev/doc/install) language
@@ -52,6 +52,13 @@ To run the tool obtain your favorite playlist in XML/CSV data-format and run it
 as following:
 
 ```
+# parse given file and print out found tracks
+./goplaylist -config config.json -file=testplaylist.xml -tracks
+# the same operation using csv file
+./goplaylist -config config.json -file=testplaylist.csv -tracks
+
+# upload my testplaylist to Spotify, i.e. ensure your config.json specifies
+# "service": "spotify" option:
 ./goplaylist -config config.json -file=testplaylist.xml
 ...
 # it will provide you an URL to click on and you'll go through verification
@@ -80,11 +87,34 @@ we briefly summarize them:
 #### Youtube limitations
 Youtube APIs are limited to 10,000 units per day per client where search query
 accounts for 100 units. Therefore, you are limited to 100 search tracks per
-single day. And, your playlist may not exceed 5,000 videos.
+single day. And, your playlist may not exceed 5,000 videos. If you will
+provide xml/csv file with more than 100 tracks it means that your playlist
+will not be built completely (if you are using free Google plan) and you
+need to run it again next day. The `goplaylist` provides ability to
+re-run existing workflow, i.e. upload your playlist again and again,
+and it will skip existing tracks and add only new ones to existing
+playlist.
 
 #### Spotify limitations
 Spotify limits user to have not more than 10,000 tracks per playlist.
+During development process we also found that spotify does not properly
+search for track year. It allows to specify query like:
+```
+track:Bla artist:Firt Last name year:1999
+```
+But for older tracks it does not keep track of it and therefore
+the code skips the `year:XXXX` part of the query. You may easily
+enable it and recompile the code if you want to, see `spotify.go`
+file and find `year:` in it.
 
+### History and motivation
+I built this tool as Tango DJ to allow upload to Youtube or Spotify either full
+discography of tracks of a specific Tango Orquestra or concrete milonga
+playlist. Therefore, the data structure (see `data.go`) as well provided
+xml/csv test playlists are oriented to Tango tracks. For instance, I defined
+`Track` to use only Name, Year, Genre, Artist, Vocal, and Orchestra attributes
+which may or may not fit modern music tracks. If you'll need more attributes
+make sure you'll provide proper PR with unit tests.
 
 ### References:
 
