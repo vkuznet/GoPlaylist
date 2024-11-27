@@ -13,7 +13,7 @@ func TestArtist(t *testing.T) {
 	if artist != expect {
 		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, expect, artist)
 	}
-	// test case when discogrpahy exist
+	// test case when discography exist
 	discography := &Discography{Orchestra: "OTV"}
 	artist = getArtist(ainput, discography)
 	if artist != "OTV" {
