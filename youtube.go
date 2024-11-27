@@ -157,22 +157,55 @@ func setupYouTubeService(title string, discography *Discography) {
 		Scopes:      []string{youtube.YoutubeForceSslScope},
 	}
 
+	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		// obtain code from HTTP request
+		code := r.URL.Query().Get("code")
+
+		token, err := config.Exchange(oauth2.NoContext, code)
+		if err != nil {
+			log.Fatalf("Unable to retrieve token from web %v", err)
+		}
+
+		client := config.Client(ctx, token)
+
+		// Create the YouTube service
+		service, err := youtube.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			log.Fatalf("Failed to create YouTube client: %v", err)
+		}
+		log.Printf("Youtube client successfully authenticated: %+v", service)
+
+		artist := getArtist(title, discography)
+		playlistID := createPlaylist(service, title)
+		for _, track := range discography.Tracks {
+			//             year := strings.Split(track.Year, "-")[0]
+			//             query := fmt.Sprintf("track:%s year:%v artist:%s", track.Name, year, artist)
+			query := fmt.Sprintf("track:%s artist:%s", track.Name, artist)
+			if Config.Verbose > 0 {
+				fmt.Println("searching for", query)
+			}
+			addToPlaylist(service, playlistID, track.Name)
+		}
+		msg := fmt.Sprintf("New playlist \"%s\" is created with ID: %s", title, playlistID)
+		log.Println(msg)
+		w.Write([]byte(msg))
+	})
+
+	// Start a web server to complete the auth flow
+	go func() {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Config.CallbackPort), nil))
+	}()
+
 	// Obtain a token (this part typically includes a user authentication process)
-	token := getTokenFromWeb(config)
-	log.Printf("### setupYoutube, config %+v token %v\n", config, token)
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the "+
+		"authorization code: \n%v\n", authURL)
 
-	client := config.Client(ctx, token)
-
-	// Create the YouTube service
-	service, err := youtube.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		log.Fatalf("Failed to create YouTube client: %v", err)
+	var code string
+	if _, err := fmt.Scan(&code); err != nil {
+		log.Fatalf("Unable to read authorization code %v", err)
 	}
 
-	playlistID := createPlaylist(service, title)
-	for _, track := range discography.Tracks {
-		addToPlaylist(service, playlistID, track.Name)
-	}
 }
 
 func createPlaylist(service *youtube.Service, title string) string {
