@@ -10,6 +10,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
 
     - name: Set up Go
@@ -67,9 +69,7 @@ jobs:
         tag: ${{ github.ref }}
         name: Release ${{ github.ref }}
         bodyFile: "LAST_CHANGES.md"
-        draft: false
-        prerelease: false
-
+        artifacts: "goplaylist.tar.gz"
 
     - name: Upload goplaylist
       id: upload-goplaylist
