@@ -1,14 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestCacheInit(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	tmpDir := t.TempDir()
-	cache := Cache{Map: make(map[string]CacheEntry)}
+	cache := Cache{}
 
 	service := "spotify"
 	cache.Init(service, tmpDir)
@@ -17,16 +20,12 @@ func TestCacheInit(t *testing.T) {
 	if _, err := os.Stat(expectedDir); os.IsNotExist(err) {
 		t.Fatalf("Expected directory %s was not created", expectedDir)
 	}
-
-	expectedFile := filepath.Join(expectedDir, "cache.csv")
-	if _, err := os.Stat(expectedFile); os.IsNotExist(err) {
-		t.Fatalf("Expected cache file %s was not created", expectedFile)
-	}
 }
 
 func TestCacheAddAndCheckTrack(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	tmpDir := t.TempDir()
-	cache := Cache{Map: make(map[string]CacheEntry)}
+	cache := Cache{}
 
 	service := "spotify"
 	cache.Init(service, tmpDir)
@@ -35,7 +34,10 @@ func TestCacheAddAndCheckTrack(t *testing.T) {
 	playlistID := "12345"
 	trackName := "MyTrack.mp3"
 
-	cache.AddTrack(title, playlistID, trackName)
+	err := cache.AddTrack(title, playlistID, trackName)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if !cache.CheckTrack(title, playlistID, trackName) {
 		t.Fatalf("Expected track %s to exist in cache but it does not", trackName)
@@ -43,33 +45,43 @@ func TestCacheAddAndCheckTrack(t *testing.T) {
 }
 
 func TestCacheLoad(t *testing.T) {
-	tmpDir := t.TempDir()
-	cache := Cache{Map: make(map[string]CacheEntry)}
-
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	cache := Cache{}
 	service := "spotify"
+	tmpDir := t.TempDir()
+
 	cache.Init(service, tmpDir)
 
 	title := "MyPlaylist"
 	playlistID := "12345"
 	trackNames := []string{"Track1.mp3", "Track2.mp3"}
 	for _, trackName := range trackNames {
-		cache.AddTrack(title, playlistID, trackName)
+		err := cache.AddTrack(title, playlistID, trackName)
+		if err != nil {
+			fmt.Printf("fail to add track %s to cache %+v", trackName, cache)
+		}
 	}
 
-	cache.Load(service)
-
-	entry, exists := cache.Map[title]
-	if !exists {
-		t.Fatalf("Expected playlist %s to exist in cache map", title)
+	tracks, err := cache.Load(service, title, playlistID)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if len(entry.Tracks) != len(trackNames) {
-		t.Fatalf("Expected %d tracks in cache, found %d", len(trackNames), len(entry.Tracks))
+	if len(tracks) != len(trackNames) {
+		fmt.Println("### generated tracks")
+		for _, t := range trackNames {
+			fmt.Println(t)
+		}
+		fmt.Println("### loaded tracks")
+		for _, t := range tracks {
+			fmt.Println(t)
+		}
+		t.Fatalf("Expected %d tracks in cache, found %d", len(trackNames), len(tracks))
 	}
 
 	for _, trackName := range trackNames {
 		found := false
-		for _, t := range entry.Tracks {
+		for _, t := range tracks {
 			if t == trackName {
 				found = true
 				break
