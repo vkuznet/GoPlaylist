@@ -54,12 +54,15 @@ func setupYouTubeService(title string, discography *Discography) {
 		// check if playlist already exist, if not we will create it
 		playlistID, err := getYoutubePlaylistIDByName(service, title)
 		if err != nil {
-			log.Println("Unable to lookup playlist ID for", title)
+			log.Printf("Unable to lookup playlist ID for '%s', error %v", title, err)
 			playlistID = createYoutubePlaylist(service, title)
 		}
 
 		// fetch existing tracks in our playlist
 		tracks, err := getYoutubeTracksForPlaylistID(service, playlistID)
+		if err != nil {
+			log.Println("unable to find tracks for playlist '%s' (%v), error %v", title, playlistID, err)
+		}
 
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
@@ -154,6 +157,9 @@ func constructYouTubePlaylistURL(playlistID string) string {
 }
 
 func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (string, error) {
+	if Config.Verbose > 0 {
+		log.Printf("lookup playlist with title: '%s'", playlistName)
+	}
 	searchResp, err := service.Search.List([]string{"snippet"}).
 		Q(playlistName).
 		Type("playlist").
@@ -169,7 +175,11 @@ func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (
 	}
 
 	// Return the playlist ID
-	return searchResp.Items[0].Id.PlaylistId, nil
+	playlistID := searchResp.Items[0].Id.PlaylistId
+	if Config.Verbose > 0 {
+		log.Println("found existing playlist %s", playlistID)
+	}
+	return playlistID, nil
 }
 
 func getYoutubeTracksForPlaylistID(service *youtube.Service, playlistID string) ([]string, error) {
@@ -188,6 +198,9 @@ func getYoutubeTracksForPlaylistID(service *youtube.Service, playlistID string) 
 		}
 
 		for _, item := range playlistItemsResp.Items {
+			if Config.Verbose > 0 {
+				log.Println("adding track %s to from existing playlist", item.Snippet.Title)
+			}
 			tracks = append(tracks, fmt.Sprintf("%s (%s)", item.Snippet.Title, item.Snippet.ResourceId.VideoId))
 		}
 

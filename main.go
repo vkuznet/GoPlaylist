@@ -24,6 +24,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Fail to parse config file %s, error %v", config, err)
 	}
+	if Config.Verbose > 0 {
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
+	}
 
 	if showTracks {
 		Config.Verbose = 0
