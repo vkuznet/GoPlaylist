@@ -55,6 +55,7 @@ func main() {
 	}
 
 	// choose a client to use
+	cache = &Cache{}
 	if strings.ToLower(Config.Service) == "spotify" {
 		cdir := fmt.Sprintf("%s/.goplaylist/%s", os.Getenv("HOME"), "spotify")
 		cache.Init("spotify", cdir)
