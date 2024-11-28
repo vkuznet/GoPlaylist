@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -16,7 +15,7 @@ type Cache struct {
 }
 
 func (c *Cache) Init(service, dir string) {
-	c.Dir = filepath.Join(dir, ".goplaylist", service)
+	c.Dir = dir
 
 	// Check if the directory exists
 	info, err := os.Stat(c.Dir)

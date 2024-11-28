@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -16,9 +15,8 @@ func TestCacheInit(t *testing.T) {
 	service := "spotify"
 	cache.Init(service, tmpDir)
 
-	expectedDir := filepath.Join(tmpDir, ".goplaylist", service)
-	if _, err := os.Stat(expectedDir); os.IsNotExist(err) {
-		t.Fatalf("Expected directory %s was not created", expectedDir)
+	if _, err := os.Stat(tmpDir); os.IsNotExist(err) {
+		t.Fatalf("Expected directory %s was not created", tmpDir)
 	}
 }
 
