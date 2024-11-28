@@ -58,8 +58,11 @@ func setupYouTubeService(title string, discography *Discography) {
 			playlistID = createYoutubePlaylist(service, title)
 		}
 
+		// load cache entries for our playlist
+		tracks, err := cache.Load("youtube", title, string(playlistID))
+
 		// fetch existing tracks in our playlist
-		tracks, err := getYoutubeTracksForPlaylistID(service, playlistID)
+		//         tracks, err := getYoutubeTracksForPlaylistID(service, playlistID)
 		if err != nil {
 			log.Printf("unable to find tracks for playlist '%s' (%v), error %v", title, playlistID, err)
 		}
@@ -72,7 +75,7 @@ func setupYouTubeService(title string, discography *Discography) {
 			query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
 			if inList(track.Name, tracks) {
 				if Config.Verbose > 0 {
-					fmt.Printf("idx: %d track: %s, already exist in playlist, skipping...\n", idx, query)
+					fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
 				}
 				log.Println("")
 			} else {

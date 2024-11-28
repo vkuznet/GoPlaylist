@@ -52,8 +52,14 @@ func setupSpotifyClient(title string, discography *Discography) {
 			playlistID = createSpotifyPlaylist(client, user.ID, title)
 		}
 
+		// load cache entries for our playlist
+		tracks, err := cache.Load("spotify", title, string(playlistID))
+
 		// fetch existing tracks in our playlist
-		tracks, err := getSpotifyTracksForPlaylistID(client, playlistID)
+		//         tracks, err := getSpotifyTracksForPlaylistID(client, playlistID)
+		if err != nil {
+			log.Printf("unable to find tracks for playlist '%s' (%v), error %v", title, playlistID, err)
+		}
 
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
@@ -67,7 +73,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 			}
 			if inList(track.Name, tracks) {
 				if Config.Verbose > 0 {
-					fmt.Printf("idx: %d track: %s, already exist in playlist, skipping...\n", idx, query)
+					fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
 				}
 				log.Println("")
 			} else {
