@@ -4,11 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 )
 
 // Add YouTube and Spotify API setup here (omitted for brevity)
 var spotifyId, spotifySecret, youtubeId, youtubSecret string
+
+// local cache
+var cache *Cache
 
 // Use the readXMLFile function
 func main() {
@@ -52,8 +56,12 @@ func main() {
 
 	// choose a client to use
 	if strings.ToLower(Config.Service) == "spotify" {
+		cdir := fmt.Sprintf("%s/.goplaylist/%s", os.Getenv("HOME"), "spotify")
+		cache.Init("spotify", cdir)
 		setupSpotifyClient(title, discography)
 	} else {
+		cdir := fmt.Sprintf("%s/.goplaylist/%s", os.Getenv("HOME"), "youtube")
+		cache.Init("youtube", cdir)
 		setupYouTubeService(title, discography)
 	}
 }

@@ -46,14 +46,14 @@ func setupSpotifyClient(title string, discography *Discography) {
 		artist := getArtist(title, discography)
 
 		// check if playlist already exist, if not we will create it
-		spotifyID, err := getSpotifyPlaylistIDByName(client, title)
+		playlistID, err := getSpotifyPlaylistIDByName(client, title)
 		if err != nil {
 			log.Println("Unable to lookup playlist ID for", title)
-			spotifyID = createSpotifyPlaylist(client, user.ID, title)
+			playlistID = createSpotifyPlaylist(client, user.ID, title)
 		}
 
 		// fetch existing tracks in our playlist
-		tracks, err := getSpotifyTracksForPlaylistID(client, spotifyID)
+		tracks, err := getSpotifyTracksForPlaylistID(client, playlistID)
 
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
@@ -74,10 +74,12 @@ func setupSpotifyClient(title string, discography *Discography) {
 				if Config.Verbose > 0 {
 					fmt.Printf("idx: %d track: %s\n", idx, query)
 				}
-				addToSpotifyPlaylist(client, spotifyID, query)
+				addToSpotifyPlaylist(client, playlistID, query)
+				// add track to local cache
+				cache.AddTrack(title, string(playlistID), track.Name)
 			}
 		}
-		purl := constructSpotifyPlaylistURL(spotifyID)
+		purl := constructSpotifyPlaylistURL(playlistID)
 		msg := fmt.Sprintf("New playlist <a href=\"%s\">%s</a> is created", purl, title)
 		log.Println(msg)
 		w.Header().Set("Content-Type", "text/html")
@@ -123,8 +125,8 @@ func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackNa
 	}
 }
 
-func constructSpotifyPlaylistURL(spotifyID spotify.ID) string {
-	return fmt.Sprintf("https://open.spotify.com/playlist/%v", spotifyID)
+func constructSpotifyPlaylistURL(playlistID spotify.ID) string {
+	return fmt.Sprintf("https://open.spotify.com/playlist/%v", playlistID)
 }
 
 func getSpotifyPlaylistIDByName(client *spotify.Client, playlistName string) (spotify.ID, error) {

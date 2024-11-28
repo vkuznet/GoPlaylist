@@ -80,6 +80,8 @@ func setupYouTubeService(title string, discography *Discography) {
 					fmt.Printf("idx: %d track: %s\n", idx, query)
 				}
 				addToYoutubePlaylist(service, playlistID, query)
+				// add track to local cache
+				cache.AddTrack(title, playlistID, track.Name)
 			}
 		}
 		purl := constructYouTubePlaylistURL(playlistID)
