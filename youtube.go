@@ -163,28 +163,28 @@ func constructYouTubePlaylistURL(playlistID string) string {
 
 func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (string, error) {
 	if Config.Verbose > 0 {
-		log.Printf("lookup playlist with title: '%s'", playlistName)
+		log.Printf("lookup playlist with title: '%s' in user's account", playlistName)
 	}
-	searchResp, err := service.Search.List([]string{"snippet"}).
-		Q(playlistName).
-		Type("playlist").
-		MaxResults(1).
+
+	// Fetch playlists owned by the authenticated user
+	playlistsResp, err := service.Playlists.List([]string{"snippet"}).
+		Mine(true).
 		Do()
-
 	if err != nil {
-		return "", fmt.Errorf("error searching playlist: %v", err)
+		return "", fmt.Errorf("error fetching user's playlists: %v", err)
 	}
 
-	if len(searchResp.Items) == 0 {
-		return "", fmt.Errorf("no playlists found for name: %s", playlistName)
+	// Iterate through the user's playlists to find the one matching the name
+	for _, playlist := range playlistsResp.Items {
+		if playlist.Snippet.Title == playlistName {
+			if Config.Verbose > 0 {
+				log.Printf("found existing playlist %s", playlist.Id)
+			}
+			return playlist.Id, nil
+		}
 	}
 
-	// Return the playlist ID
-	playlistID := searchResp.Items[0].Id.PlaylistId
-	if Config.Verbose > 0 {
-		log.Printf("found existing playlist %s", playlistID)
-	}
-	return playlistID, nil
+	return "", fmt.Errorf("no playlist found with name: %s", playlistName)
 }
 
 func getYoutubeTracksForPlaylistID(service *youtube.Service, playlistID string) ([]string, error) {

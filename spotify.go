@@ -136,17 +136,20 @@ func constructSpotifyPlaylistURL(playlistID spotify.ID) string {
 }
 
 func getSpotifyPlaylistIDByName(client *spotify.Client, playlistName string) (spotify.ID, error) {
-	searchResults, err := client.Search(context.Background(), playlistName, spotify.SearchTypePlaylist)
+	// Fetch all playlists for the authenticated user
+	playlists, err := client.CurrentUsersPlaylists(context.Background())
 	if err != nil {
-		return "", fmt.Errorf("error searching playlists: %v", err)
+		return "", fmt.Errorf("error fetching user's playlists: %v", err)
 	}
 
-	if searchResults.Playlists == nil || len(searchResults.Playlists.Playlists) == 0 {
-		return "", fmt.Errorf("no playlists found for name: %s", playlistName)
+	// Iterate through the user's playlists to find the one matching the name
+	for _, playlist := range playlists.Playlists {
+		if playlist.Name == playlistName {
+			return playlist.ID, nil
+		}
 	}
 
-	// Return the ID of the first playlist in the search results
-	return searchResults.Playlists.Playlists[0].ID, nil
+	return "", fmt.Errorf("no playlist found with name: %s", playlistName)
 }
 
 func getSpotifyTracksForPlaylistID(client *spotify.Client, playlistID spotify.ID) ([]string, error) {
