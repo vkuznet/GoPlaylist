@@ -12,6 +12,7 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+// helper function to setup youtube client
 func setupYouTubeService(title string, discography *Discography) {
 	if Config.YoutubeSecret == "" {
 		return
@@ -48,8 +49,8 @@ func setupYouTubeService(title string, discography *Discography) {
 		}
 		log.Println("Youtube client successfully authenticated")
 
-		// obtain artist either from title of discography
-		artist := getArtist(title, discography)
+		// obtain orchestra either from title of discography
+		orchestra := getOrchestra(title, discography)
 
 		// check if playlist already exist, if not we will create it
 		playlistID, err := getYoutubePlaylistIDByName(service, title)
@@ -69,11 +70,12 @@ func setupYouTubeService(title string, discography *Discography) {
 
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
-				artist = track.Orchestra
+				orchestra = track.Orchestra
 			}
 			year := strings.Split(track.Year, "-")[0]
-			query := fmt.Sprintf("%s %s %v", track.Name, artist, year)
-			if inList(track.Name, tracks) {
+			query := fmt.Sprintf("%s %s %v", track.Name, orchestra, year)
+			trk := Track{Name: track.Name, Year: year, Orchestra: orchestra, Artist: track.Artist}
+			if inList(trk, tracks) {
 				if Config.Verbose > 0 {
 					fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
 				}
@@ -84,7 +86,7 @@ func setupYouTubeService(title string, discography *Discography) {
 				}
 				addToYoutubePlaylist(service, playlistID, query)
 				// add track to local cache
-				cache.AddTrack(title, playlistID, track.Name)
+				cache.AddTrack(title, playlistID, trk)
 			}
 		}
 		purl := constructYouTubePlaylistURL(playlistID)
@@ -111,6 +113,7 @@ func setupYouTubeService(title string, discography *Discography) {
 
 }
 
+// helper function to create youtube playlist
 func createYoutubePlaylist(service *youtube.Service, title string) string {
 	playlist := &youtube.Playlist{
 		Snippet: &youtube.PlaylistSnippet{
@@ -130,6 +133,7 @@ func createYoutubePlaylist(service *youtube.Service, title string) string {
 	return createdPlaylist.Id
 }
 
+// helper function to add new track to youtube playlist
 func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 	searchResp, err := service.Search.List([]string{"id"}).
 		Q(query).
@@ -157,10 +161,12 @@ func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 	}
 }
 
+// helper function to construct youtube playlist URL from given playlist ID
 func constructYouTubePlaylistURL(playlistID string) string {
 	return fmt.Sprintf("https://www.youtube.com/playlist?list=%s", playlistID)
 }
 
+// helper function to get youtube playlist ID from given playlist name
 func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (string, error) {
 	if Config.Verbose > 0 {
 		log.Printf("lookup playlist with title: '%s' in user's account", playlistName)
@@ -187,6 +193,7 @@ func getYoutubePlaylistIDByName(service *youtube.Service, playlistName string) (
 	return "", fmt.Errorf("no playlist found with name: %s", playlistName)
 }
 
+// helper function to get youtube tracks for given playlist ID
 func getYoutubeTracksForPlaylistID(service *youtube.Service, playlistID string) ([]string, error) {
 	var tracks []string
 	nextPageToken := ""

@@ -9,11 +9,13 @@ import (
 	"strings"
 )
 
+// Cache represents local cache object
 type Cache struct {
 	Dir    string
-	Tracks []string
+	Tracks []Track
 }
 
+// Init method initialize cache
 func (c *Cache) Init(service, dir string) {
 	c.Dir = dir
 
@@ -33,6 +35,7 @@ func (c *Cache) Init(service, dir string) {
 	}
 }
 
+// helper function to construct cache file
 func (c *Cache) cacheFile(title, playlistID string) (string, error) {
 	cdir := fmt.Sprintf("%s/%s/%s", c.Dir, title, playlistID)
 	err := os.MkdirAll(cdir, os.ModePerm)
@@ -51,12 +54,13 @@ func (c *Cache) cacheFile(title, playlistID string) (string, error) {
 	return cacheFile, nil
 }
 
-func (c *Cache) AddTrack(title, playlistID, trackName string) error {
+// AddTrack adds new track object to cache
+func (c *Cache) AddTrack(title, playlistID string, track Track) error {
 	var file *os.File
 	var err error
 
 	// Check if the track already exists
-	if c.CheckTrack(title, playlistID, trackName) {
+	if c.CheckTrack(title, playlistID, track) {
 		return nil // No need to add, already exists
 	}
 
@@ -84,14 +88,15 @@ func (c *Cache) AddTrack(title, playlistID, trackName string) error {
 	defer file.Close()
 
 	// Append the track to our cache file
-	if _, err := file.WriteString(trackName + "\n"); err != nil {
+	if _, err := file.WriteString(track.String() + "\n"); err != nil {
 		return fmt.Errorf("error writing to cache file: %w", err)
 	}
 
 	return nil
 }
 
-func (c *Cache) CheckTrack(title, playlistID, trackName string) bool {
+// CheckTrack checks track within existing local cache
+func (c *Cache) CheckTrack(title, playlistID string, track Track) bool {
 	cacheFile, err := c.cacheFile(title, playlistID)
 	if err != nil {
 		return false
@@ -108,7 +113,7 @@ func (c *Cache) CheckTrack(title, playlistID, trackName string) bool {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == trackName {
+		if line == track.String() {
 			return true
 		}
 	}
@@ -121,8 +126,9 @@ func (c *Cache) CheckTrack(title, playlistID, trackName string) bool {
 	return false
 }
 
-func (c *Cache) Load(service, title, playlistID string) ([]string, error) {
-	var tracks []string
+// Load method loads track from local cache and return list of track objects
+func (c *Cache) Load(service, title, playlistID string) ([]Track, error) {
+	var tracks []Track
 
 	// Open the cache file
 	cacheFile, err := c.cacheFile(title, playlistID)
@@ -139,9 +145,10 @@ func (c *Cache) Load(service, title, playlistID string) ([]string, error) {
 	if err != nil {
 		return tracks, err
 	}
-	for _, trk := range strings.Split(string(data), "\n") {
-		if trk != "" {
-			tracks = append(tracks, trk)
+	for _, t := range strings.Split(string(data), "\n") {
+		if t != "" {
+			track := constructTrack(t)
+			tracks = append(tracks, track)
 		}
 	}
 	return tracks, nil

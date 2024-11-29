@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	spotify "github.com/zmb3/spotify/v2"
 	auth "github.com/zmb3/spotify/v2/auth"
 )
 
+// helper function to setup spotify client
 func setupSpotifyClient(title string, discography *Discography) {
 	ctx := context.Background()
 
@@ -42,8 +44,8 @@ func setupSpotifyClient(title string, discography *Discography) {
 			return
 		}
 
-		// obtain artist either from title of discography
-		artist := getArtist(title, discography)
+		// obtain orchestra either from title of discography
+		orchestra := getOrchestra(title, discography)
 
 		// check if playlist already exist, if not we will create it
 		playlistID, err := getSpotifyPlaylistIDByName(client, title)
@@ -63,15 +65,16 @@ func setupSpotifyClient(title string, discography *Discography) {
 
 		for idx, track := range discography.Tracks {
 			if track.Orchestra != "" {
-				artist = track.Orchestra
+				orchestra = track.Orchestra
 			}
-			//             year := strings.Split(track.Year, "-")[0]
+			year := strings.Split(track.Year, "-")[0]
 			//             query := fmt.Sprintf("track:%s year:%v artist:%s", track.Name, year, artist)
-			query := fmt.Sprintf("track:%s artist:%s", track.Name, artist)
+			query := fmt.Sprintf("track:%s artist:%s", track.Name, orchestra)
 			if Config.Verbose > 0 {
 				fmt.Printf("query idx: %d track: %s\n", idx, query)
 			}
-			if inList(track.Name, tracks) {
+			trk := Track{Name: track.Name, Year: year, Orchestra: orchestra, Artist: track.Artist}
+			if inList(trk, tracks) {
 				if Config.Verbose > 0 {
 					fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
 				}
@@ -82,7 +85,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 				}
 				addToSpotifyPlaylist(client, playlistID, query)
 				// add track to local cache
-				cache.AddTrack(title, string(playlistID), track.Name)
+				cache.AddTrack(title, string(playlistID), trk)
 			}
 		}
 		purl := constructSpotifyPlaylistURL(playlistID)
@@ -107,6 +110,7 @@ func setupSpotifyClient(title string, discography *Discography) {
 	}
 }
 
+// helper function to create spotify playlist
 func createSpotifyPlaylist(client *spotify.Client, userID, title string) spotify.ID {
 	ctx := context.Background()
 	playlist, err := client.CreatePlaylistForUser(ctx, userID, title, "Playlist created for Orquesta Típica", true, false)
@@ -116,6 +120,7 @@ func createSpotifyPlaylist(client *spotify.Client, userID, title string) spotify
 	return playlist.ID
 }
 
+// helper function to add track to spotify playlist
 func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackName string) {
 	ctx := context.Background()
 	searchResults, err := client.Search(ctx, trackName, spotify.SearchTypeTrack)
@@ -131,10 +136,12 @@ func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackNa
 	}
 }
 
+// helper function to construct spotify playlist URL
 func constructSpotifyPlaylistURL(playlistID spotify.ID) string {
 	return fmt.Sprintf("https://open.spotify.com/playlist/%v", playlistID)
 }
 
+// helper function to get spotify playlist IDa by provided name
 func getSpotifyPlaylistIDByName(client *spotify.Client, playlistName string) (spotify.ID, error) {
 	// Fetch all playlists for the authenticated user
 	playlists, err := client.CurrentUsersPlaylists(context.Background())
@@ -152,6 +159,7 @@ func getSpotifyPlaylistIDByName(client *spotify.Client, playlistName string) (sp
 	return "", fmt.Errorf("no playlist found with name: %s", playlistName)
 }
 
+// helper function to get spotify tracks for given playlist ID
 func getSpotifyTracksForPlaylistID(client *spotify.Client, playlistID spotify.ID) ([]string, error) {
 	var tracks []string
 	playlist, err := client.GetPlaylist(context.Background(), playlistID)

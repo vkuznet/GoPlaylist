@@ -35,16 +35,17 @@ func (rt roundTripperWithToken) RoundTrip(req *http.Request) (*http.Response, er
 	return rt.transport.RoundTrip(req)
 }
 
-func getArtist(title string, discography *Discography) string {
+// helper function to get orchestra
+func getOrchestra(title string, discography *Discography) string {
 	title = strings.Replace(title, "(", "", -1)
 	title = strings.Replace(title, ")", "", -1)
 	title = strings.Replace(title, ".", "", -1)
-	artist := title
+	orchestra := title
 	// use discography orchestra if it exist
 	if discography != nil && discography.Orchestra != "" {
-		artist = discography.Orchestra
+		orchestra = discography.Orchestra
 	}
-	words := strings.Fields(artist) // Split title into words
+	words := strings.Fields(orchestra) // Split title into words
 	var result []string
 
 	for _, word := range words {
@@ -65,14 +66,16 @@ func isAlphabetical(word string) bool {
 	return true
 }
 
+// helper function to construct callback URL
 func callbackUrl() string {
 	url := fmt.Sprintf("http://localhost:%d/callback", Config.CallbackPort)
 	return url
 }
 
-func inList(key string, ilist []string) bool {
-	for _, k := range ilist {
-		if k == key {
+// helper function to check track object in tracklist
+func inList(track Track, trackList []Track) bool {
+	for _, t := range trackList {
+		if t.String() == track.String() {
 			return true
 		}
 	}

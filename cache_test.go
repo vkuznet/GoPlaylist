@@ -30,15 +30,15 @@ func TestCacheAddAndCheckTrack(t *testing.T) {
 
 	title := "MyPlaylist"
 	playlistID := "12345"
-	trackName := "MyTrack.mp3"
+	track := Track{Name: "Name", Year: "Year", Orchestra: "Orchestra"}
 
-	err := cache.AddTrack(title, playlistID, trackName)
+	err := cache.AddTrack(title, playlistID, track)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !cache.CheckTrack(title, playlistID, trackName) {
-		t.Fatalf("Expected track %s to exist in cache but it does not", trackName)
+	if !cache.CheckTrack(title, playlistID, track) {
+		t.Fatalf("Expected track %s to exist in cache but it does not", track.String())
 	}
 }
 
@@ -52,41 +52,44 @@ func TestCacheLoad(t *testing.T) {
 
 	title := "MyPlaylist"
 	playlistID := "12345"
-	trackNames := []string{"Track1.mp3", "Track2.mp3"}
-	for _, trackName := range trackNames {
-		err := cache.AddTrack(title, playlistID, trackName)
+	tracks := []Track{
+		Track{Name: "Name", Year: "Year", Orchestra: "Orchestra1"},
+		Track{Name: "Name", Year: "Year", Orchestra: "Orchestra2"},
+	}
+	for _, track := range tracks {
+		err := cache.AddTrack(title, playlistID, track)
 		if err != nil {
-			fmt.Printf("fail to add track %s to cache %+v", trackName, cache)
+			fmt.Printf("fail to add track %s to cache %+v", track.String(), cache)
 		}
 	}
 
-	tracks, err := cache.Load(service, title, playlistID)
+	cacheTracks, err := cache.Load(service, title, playlistID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(tracks) != len(trackNames) {
+	if len(tracks) != len(cacheTracks) {
 		fmt.Println("### generated tracks")
-		for _, t := range trackNames {
-			fmt.Println(t)
-		}
-		fmt.Println("### loaded tracks")
 		for _, t := range tracks {
 			fmt.Println(t)
 		}
-		t.Fatalf("Expected %d tracks in cache, found %d", len(trackNames), len(tracks))
+		fmt.Println("### cached tracks")
+		for _, t := range cacheTracks {
+			fmt.Println(t)
+		}
+		t.Fatalf("Expected %d tracks in cache, found %d", len(tracks), len(cacheTracks))
 	}
 
-	for _, trackName := range trackNames {
+	for _, track := range tracks {
 		found := false
-		for _, t := range tracks {
-			if t == trackName {
+		for _, t := range cacheTracks {
+			if t.String() == track.String() {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Fatalf("Track %s not found in cache map", trackName)
+			t.Fatalf("Track %s not found in cache map", track.String())
 		}
 	}
 }

@@ -4,27 +4,32 @@ import (
 	"testing"
 )
 
-// TestGetArtist
-func TestArtist(t *testing.T) {
+// TestGetorchestra
+func Testorchestra(t *testing.T) {
 	ainput := "Orquesta Tipica Victor (dir. Adolfo Carabelli)"
 	expect := "Orquesta Tipica Victor dir Adolfo Carabelli"
-	artist := getArtist(ainput, nil)
-	if artist != expect {
-		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, expect, artist)
+	orchestra := getOrchestra(ainput, nil)
+	if orchestra != expect {
+		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, expect, orchestra)
 	}
 	// test case when discography exist
 	discography := &Discography{Orchestra: "OTV"}
-	artist = getArtist(ainput, discography)
-	if artist != "OTV" {
-		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, "OTV", artist)
+	orchestra = getOrchestra(ainput, discography)
+	if orchestra != "OTV" {
+		t.Errorf("Fail to parse input '%s': expect='%s' received='%s' ", ainput, "OTV", orchestra)
 	}
 
 }
 
 func TestInUtils(t *testing.T) {
-	ilist := []string{"a", "b", "c"}
-	res := inList("c", ilist)
-	if !res {
-		t.Error("unable to find item 'a' in a list", ilist)
+	trk1 := Track{Name: "Name", Year: "Year", Orchestra: "Orchestra1"}
+	trk2 := Track{Name: "Name", Year: "Year", Orchestra: "Orchestra2"}
+	trk3 := Track{Name: "Name", Year: "Year", Orchestra: "Orchestra3"}
+	trackList := []Track{trk1, trk2, trk3}
+	for _, trk := range trackList {
+		res := inList(trk, trackList)
+		if !res {
+			t.Errorf("unable to find item '%s' in a list %s", trk.String(), trackList)
+		}
 	}
 }

@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
+// Track represents track
 type Track struct {
 	Orchestra string `xml:"orchestra,attr"`
 	Year      string `xml:"year,attr"`
@@ -18,11 +20,30 @@ type Track struct {
 	Vocal     string `xml:"vocal,attr,omitempty"`
 }
 
+// String provides string representation of the track
+func (t *Track) String() string {
+	return fmt.Sprintf("%s,%s,%s,%s", t.Name, t.Orchestra, t.Year, t.Artist)
+}
+
+// helper function to construct track from its string representation
+func constructTrack(t string) Track {
+	arr := strings.Split(t, ",")
+	track := Track{
+		Name:      arr[0],
+		Orchestra: arr[1],
+		Year:      arr[2],
+		Artist:    arr[3],
+	}
+	return track
+}
+
+// Discography represents discography object
 type Discography struct {
 	Orchestra string  `xml:"orchestra,attr"`
 	Tracks    []Track `xml:"track"`
 }
 
+// helper function to read XML (discography) file
 func readXMLFile(filename string) (*Discography, error) {
 	xmlFile, err := os.Open(filename)
 	if err != nil {
@@ -48,6 +69,7 @@ func readXMLFile(filename string) (*Discography, error) {
 	return &discography, nil
 }
 
+// helper function to read CSV (discography) file
 func readCSVFile(filename string) (*Discography, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -93,6 +115,7 @@ func readCSVFile(filename string) (*Discography, error) {
 	return &discography, nil
 }
 
+// helper function to read (discography) file
 func readFile(filename string) (*Discography, error) {
 	ext := filepath.Ext(filename)
 	switch ext {

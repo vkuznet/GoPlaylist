@@ -14,9 +14,9 @@ func TestXMLParsing(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	artist := getArtist("bla", discography)
-	if artist != "bla" {
-		t.Errorf("wrong artist %s, discography %+v", artist, discography)
+	orchestra := getOrchestra("bla", discography)
+	if orchestra != "bla" {
+		t.Errorf("wrong orchestra %s, discography %+v", orchestra, discography)
 	}
 
 	// loop over tracks to see orchestra
