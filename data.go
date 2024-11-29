@@ -33,7 +33,6 @@ func constructTrack(t string) Track {
 		Orchestra: record[0],
 		Year:      record[1],
 		Name:      record[2],
-		Artist:    record[3],
 	}
 	if len(record) == 4 {
 		track.Artist = record[3]
