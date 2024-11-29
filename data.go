@@ -22,16 +22,17 @@ type Track struct {
 
 // String provides string representation of the track
 func (t *Track) String() string {
-	return fmt.Sprintf("%s,%s,%s,%s", t.Name, t.Orchestra, t.Year, t.Artist)
+	return fmt.Sprintf("%s,%s,%s,%s", t.Orchestra, t.Year, t.Name, t.Artist)
 }
 
 // helper function to construct track from its string representation
 func constructTrack(t string) Track {
 	arr := strings.Split(t, ",")
+	// NOTE: array should match String() method
 	track := Track{
-		Name:      arr[0],
-		Orchestra: arr[1],
-		Year:      arr[2],
+		Orchestra: arr[0],
+		Year:      arr[1],
+		Name:      arr[2],
 		Artist:    arr[3],
 	}
 	return track
@@ -90,6 +91,7 @@ func readCSVFile(filename string) (*Discography, error) {
 		if len(record) < 3 {
 			continue // Skip rows with insufficient data
 		}
+		// NOTE: record should match String() method of Track object above
 		track := Track{
 			Orchestra: record[0],
 			Year:      record[1],
