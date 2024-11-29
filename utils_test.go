@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-// TestGetorchestra
-func Testorchestra(t *testing.T) {
+// TestOrchestra
+func TestOrchestra(t *testing.T) {
 	ainput := "Orquesta Tipica Victor (dir. Adolfo Carabelli)"
 	expect := "Orquesta Tipica Victor dir Adolfo Carabelli"
 	orchestra := getOrchestra(ainput, nil)
