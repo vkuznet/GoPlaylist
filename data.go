@@ -27,13 +27,20 @@ func (t *Track) String() string {
 
 // helper function to construct track from its string representation
 func constructTrack(t string) Track {
-	arr := strings.Split(t, ",")
-	// NOTE: array should match String() method
+	record := strings.Split(t, ",")
+	// NOTE: record should match String() method
 	track := Track{
-		Orchestra: arr[0],
-		Year:      arr[1],
-		Name:      arr[2],
-		Artist:    arr[3],
+		Orchestra: record[0],
+		Year:      record[1],
+		Name:      record[2],
+		Artist:    record[3],
+	}
+	if len(record) == 4 {
+		track.Artist = record[3]
+	} else if len(record) == 5 {
+		track.Genre = record[4]
+	} else if len(record) == 6 {
+		track.Vocal = record[5]
 	}
 	return track
 }
