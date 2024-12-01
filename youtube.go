@@ -84,9 +84,10 @@ func setupYouTubeService(title string, discography *Discography) {
 				if Config.Verbose > 0 {
 					fmt.Printf("idx: %d track: %s\n", idx, query)
 				}
-				addToYoutubePlaylist(service, playlistID, query)
-				// add track to local cache
-				cache.AddTrack(title, playlistID, trk)
+				if err := addToYoutubePlaylist(service, playlistID, query); err == nil {
+					// add track to local cache if was successfully added to playlist
+					cache.AddTrack(title, playlistID, trk)
+				}
 			}
 		}
 		purl := constructYouTubePlaylistURL(playlistID)
@@ -134,7 +135,7 @@ func createYoutubePlaylist(service *youtube.Service, title string) string {
 }
 
 // helper function to add new track to youtube playlist
-func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
+func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) error {
 	searchResp, err := service.Search.List([]string{"id"}).
 		Q(query).
 		MaxResults(1).
@@ -142,7 +143,7 @@ func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 		Do()
 	if err != nil || len(searchResp.Items) == 0 {
 		log.Printf("Error finding video: %v", err)
-		return
+		return err
 	}
 	videoID := searchResp.Items[0].Id.VideoId
 
@@ -158,7 +159,9 @@ func addToYoutubePlaylist(service *youtube.Service, playlistID, query string) {
 	_, err = service.PlaylistItems.Insert([]string{"snippet"}, playlistItem).Do()
 	if err != nil {
 		log.Printf("Error adding video to playlist: %v", err)
+		return err
 	}
+	return nil
 }
 
 // helper function to construct youtube playlist URL from given playlist ID

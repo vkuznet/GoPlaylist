@@ -83,9 +83,10 @@ func setupSpotifyClient(title string, discography *Discography) {
 				if Config.Verbose > 0 {
 					fmt.Printf("idx: %d track: %s\n", idx, query)
 				}
-				addToSpotifyPlaylist(client, playlistID, query)
-				// add track to local cache
-				cache.AddTrack(title, string(playlistID), trk)
+				if err := addToSpotifyPlaylist(client, playlistID, query); err == nil {
+					// add track to local cache if was successfully added to playlist
+					cache.AddTrack(title, string(playlistID), trk)
+				}
 			}
 		}
 		purl := constructSpotifyPlaylistURL(playlistID)
@@ -121,19 +122,21 @@ func createSpotifyPlaylist(client *spotify.Client, userID, title string) spotify
 }
 
 // helper function to add track to spotify playlist
-func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackName string) {
+func addToSpotifyPlaylist(client *spotify.Client, playlistID spotify.ID, trackName string) error {
 	ctx := context.Background()
 	searchResults, err := client.Search(ctx, trackName, spotify.SearchTypeTrack)
 	if err != nil || len(searchResults.Tracks.Tracks) == 0 {
 		log.Printf("Error finding track: %v", err)
-		return
+		return err
 	}
 	trackID := searchResults.Tracks.Tracks[0].ID
 
 	_, err = client.AddTracksToPlaylist(ctx, playlistID, trackID)
 	if err != nil {
 		log.Printf("Error adding track to playlist: %v", err)
+		return err
 	}
+	return nil
 }
 
 // helper function to construct spotify playlist URL
