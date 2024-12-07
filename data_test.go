@@ -180,3 +180,76 @@ func TestReadFile(t *testing.T) {
 		t.Errorf("fail to process xml file: expected %+v, got %+v", expectedDiscography, discography)
 	}
 }
+
+func TestSortBy(t *testing.T) {
+	// Create a sample Discography object
+	discography := Discography{
+		Orchestra: "Orchestra1",
+		Tracks: []Track{
+			{Orchestra: "Orchestra2", Year: "2020", Name: "Track C", Artist: "Artist A", Genre: "Genre X", Vocal: "Vocal X"},
+			{Orchestra: "Orchestra3", Year: "2019", Name: "Track A", Artist: "Artist B", Genre: "Genre Z", Vocal: "Vocal Y"},
+			{Orchestra: "Orchestra1", Year: "2021", Name: "Track B", Artist: "Artist A", Genre: "Genre Y", Vocal: "Vocal Z"},
+		},
+	}
+
+	tests := []struct {
+		attr        string
+		order       string
+		expected    []Track
+		description string
+	}{
+		{
+			attr:  "year",
+			order: "ascending",
+			expected: []Track{
+				{Orchestra: "Orchestra3", Year: "2019", Name: "Track A", Artist: "Artist B", Genre: "Genre Z", Vocal: "Vocal Y"},
+				{Orchestra: "Orchestra2", Year: "2020", Name: "Track C", Artist: "Artist A", Genre: "Genre X", Vocal: "Vocal X"},
+				{Orchestra: "Orchestra1", Year: "2021", Name: "Track B", Artist: "Artist A", Genre: "Genre Y", Vocal: "Vocal Z"},
+			},
+			description: "Sort by year in ascending order",
+		},
+		{
+			attr:  "name",
+			order: "descending",
+			expected: []Track{
+				{Orchestra: "Orchestra2", Year: "2020", Name: "Track C", Artist: "Artist A", Genre: "Genre X", Vocal: "Vocal X"},
+				{Orchestra: "Orchestra1", Year: "2021", Name: "Track B", Artist: "Artist A", Genre: "Genre Y", Vocal: "Vocal Z"},
+				{Orchestra: "Orchestra3", Year: "2019", Name: "Track A", Artist: "Artist B", Genre: "Genre Z", Vocal: "Vocal Y"},
+			},
+			description: "Sort by name in descending order",
+		},
+		{
+			attr:  "artist",
+			order: "ascending",
+			expected: []Track{
+				{Orchestra: "Orchestra2", Year: "2020", Name: "Track C", Artist: "Artist A", Genre: "Genre X", Vocal: "Vocal X"},
+				{Orchestra: "Orchestra1", Year: "2021", Name: "Track B", Artist: "Artist A", Genre: "Genre Y", Vocal: "Vocal Z"},
+				{Orchestra: "Orchestra3", Year: "2019", Name: "Track A", Artist: "Artist B", Genre: "Genre Z", Vocal: "Vocal Y"},
+			},
+			description: "Sort by artist in ascending order",
+		},
+		{
+			attr:  "genre",
+			order: "ascending",
+			expected: []Track{
+				{Orchestra: "Orchestra2", Year: "2020", Name: "Track C", Artist: "Artist A", Genre: "Genre X", Vocal: "Vocal X"},
+				{Orchestra: "Orchestra1", Year: "2021", Name: "Track B", Artist: "Artist A", Genre: "Genre Y", Vocal: "Vocal Z"},
+				{Orchestra: "Orchestra3", Year: "2019", Name: "Track A", Artist: "Artist B", Genre: "Genre Z", Vocal: "Vocal Y"},
+			},
+			description: "Sort by genre in ascending order",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			// Make a copy of the original discography to sort
+			d := discography
+			d.sortBy(test.attr, test.order)
+
+			// Verify the result matches the expected order
+			if !reflect.DeepEqual(d.Tracks, test.expected) {
+				t.Errorf("Failed %s\nGot: %+v\nExpected: %+v", test.description, d.Tracks, test.expected)
+			}
+		})
+	}
+}
