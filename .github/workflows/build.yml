@@ -6,7 +6,6 @@ on:
       - '*.*.*'
 
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -24,39 +23,43 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Build
+    - name: Build for all architectures
       run: |
-        echo "Linux builds"
-        GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_linux_arm64
-        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_linux_amd64
-        GOOS=linux GOARCH=ppc64le CGO_ENABLED=0 go build -o goplaylst_linux_power8
-        GOOS=linux GOARCH=riscv64 CGO_ENABLED=0 go build -o goplaylst_linux_riscv64
-        GOOS=linux GOARCH=s390x CGO_ENABLED=0 go build -o goplaylst_linux_s390x
+        set -e
 
-        echo "Freebsd builds"
-        GOOS=freebsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_freebsd_arm64
-        GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_freebsd_amd64
+        declare -a OS_LIST=("linux" "freebsd" "openbsd" "netbsd" "darwin" "windows")
+        declare -a ARCH_LIST=("arm64" "amd64")
+        declare -a EXTRA_ARCH_LINUX=("ppc64le" "riscv64" "s390x")
 
-        echo "Openbsd builds"
-        GOOS=openbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_openbsd_arm64
-        GOOS=openbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_openbsd_amd64
+        echo "Building GoPlaylst binaries..."
+        for OS in "${OS_LIST[@]}"; do
+          for ARCH in "${ARCH_LIST[@]}"; do
+            OUT_NAME="goplaylst_${OS}_${ARCH}"
+            [ "$OS" == "windows" ] && OUT_NAME+=".exe"
+            GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 go build -o "$OUT_NAME"
+          done
+        done
 
-        echo "Netbsd builds"
-        GOOS=netbsd GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_netbsd_arm64
-        GOOS=netbsd GOARCH=amd64 CGO_ENABLED=0 go build -o goplaylst_netbsd_amd64
+        # Handle additional Linux-specific architectures
+        for ARCH in "${EXTRA_ARCH_LINUX[@]}"; do
+          GOOS=linux GOARCH=$ARCH CGO_ENABLED=0 go build -o "goplaylst_linux_$ARCH"
+        done
 
-        echo "Darwin builds"
-        GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_darwin_arm64
-        GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_darwin_amd64
+        echo "Building iTunesXML2CSV binaries..."
+        cd iTunesXML2CSV
+        for OS in "${OS_LIST[@]}"; do
+          for ARCH in "${ARCH_LIST[@]}"; do
+            OUT_NAME="itunesxml2csv_${OS}_${ARCH}"
+            [ "$OS" == "windows" ] && OUT_NAME+=".exe"
+            GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 go build -o "$OUT_NAME"
+          done
+        done
+        cd -
 
-        echo "Windows builds"
-        GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_windows_arm64.exe
-        GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o goplaylst_windows_amd64.exe
+        echo "Creating tarball..."
+        tar cfz goplaylist.tar.gz goplaylst_* itunesxml2csv_*
 
-        echo "Tar ball"
-        tar cfz goplaylist.tar.gz goplaylst_linux* goplaylst_darwin* goplaylst_windows*
-
-        echo "Generate RELEASE.MD and LAST_CHANGES.md"
+        echo "Generate RELEASE.MD and LAST_CHANGES.md..."
         ./gen_release_log.sh
         ./extract_last_changes.sh
 
