@@ -136,7 +136,7 @@ func TestReadFile(t *testing.T) {
 	csvFile.Close()
 
 	// Test readFile with CSV
-	discography, err := readFile(csvFilename)
+	discography, err := readFile(csvFilename, "", "")
 	if err != nil {
 		t.Fatalf("Failed to read CSV file: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestReadFile(t *testing.T) {
 	}
 
 	// Test readFile with XML
-	discography, err = readFile(xmlFilename)
+	discography, err = readFile(xmlFilename, "", "")
 	if err != nil {
 		t.Fatalf("Failed to read XML file: %v", err)
 	}
@@ -171,7 +171,7 @@ func TestReadFile(t *testing.T) {
 	//     }
 
 	// Test readFile with XML
-	discography, err = readFile(xmlFilename)
+	discography, err = readFile(xmlFilename, "", "")
 	if err != nil {
 		t.Fatalf("Failed to read CSV file: %v", err)
 	}
