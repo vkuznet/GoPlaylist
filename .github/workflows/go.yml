@@ -27,3 +27,9 @@ jobs:
     - name: Test
       run: go test -v .
 
+    - name: Build iTunesXML2CSV
+      run: |
+        cd iTunesXML2CSV
+        go build
+        cd -
+
