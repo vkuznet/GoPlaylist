@@ -51,7 +51,7 @@ jobs:
           for ARCH in "${ARCH_LIST[@]}"; do
             OUT_NAME="itunesxml2csv_${OS}_${ARCH}"
             [ "$OS" == "windows" ] && OUT_NAME+=".exe"
-            GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 go build -o "$OUT_NAME"
+            GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 go build -o ../"$OUT_NAME"
           done
         done
         cd -
