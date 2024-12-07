@@ -5,8 +5,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -48,6 +50,38 @@ func constructTrack(t string) Track {
 type Discography struct {
 	Orchestra string  `xml:"orchestra,attr"`
 	Tracks    []Track `xml:"track"`
+}
+
+// SortBy sorts the tracks of the Discography by the specified attribute and order.
+// Supported attributes: "orchestra", "year", "name", "artist", "genre", "vocal"
+// Order can be "ascending" or "descending".
+func (d *Discography) sortBy(attr, order string) {
+	sort.Slice(d.Tracks, func(i, j int) bool {
+		var less bool
+		switch strings.ToLower(attr) {
+		case "orchestra":
+			less = d.Tracks[i].Orchestra < d.Tracks[j].Orchestra
+		case "year":
+			less = d.Tracks[i].Year < d.Tracks[j].Year
+		case "name":
+			less = d.Tracks[i].Name < d.Tracks[j].Name
+		case "artist":
+			less = d.Tracks[i].Artist < d.Tracks[j].Artist
+		case "genre":
+			less = d.Tracks[i].Genre < d.Tracks[j].Genre
+		case "vocal":
+			less = d.Tracks[i].Vocal < d.Tracks[j].Vocal
+		default:
+			log.Printf("Invalid attribute '%s' for sorting. No action taken.", attr)
+			return false
+		}
+
+		// Reverse the sorting order if "descending"
+		if strings.ToLower(order) == "descending" || strings.ToLower(order) == "desc" {
+			return !less
+		}
+		return less
+	})
 }
 
 // helper function to read XML (discography) file
@@ -124,14 +158,23 @@ func readCSVFile(filename string) (*Discography, error) {
 }
 
 // helper function to read (discography) file
-func readFile(filename string) (*Discography, error) {
+func readFile(filename, sortBy, sortOrder string) (*Discography, error) {
 	ext := filepath.Ext(filename)
+	var discography *Discography
+	var err error
 	switch ext {
 	case ".xml":
-		return readXMLFile(filename)
+		discography, err = readXMLFile(filename)
 	case ".csv":
-		return readCSVFile(filename)
+		discography, err = readCSVFile(filename)
 	default:
-		return nil, fmt.Errorf("unsupported file format: %s", ext)
+		err = fmt.Errorf("unsupported file format: %s", ext)
 	}
+	if sortBy != "" {
+		if sortOrder == "" {
+			sortOrder = "ascending"
+		}
+		discography.sortBy(sortBy, sortOrder)
+	}
+	return discography, err
 }

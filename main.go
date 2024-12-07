@@ -22,6 +22,10 @@ func main() {
 	flag.StringVar(&config, "config", "", "configuration file")
 	var showTracks bool
 	flag.BoolVar(&showTracks, "tracks", false, "show tracks and exit")
+	var sortBy string
+	flag.StringVar(&sortBy, "sortBy", "", "sort tracks by attribute: orchestra, artist, year, genre, vocal")
+	var sortOrder string
+	flag.StringVar(&sortOrder, "sortOrder", "ascending", "sort order: ascending or descending")
 	flag.Parse()
 
 	err := parseConfig(config)
@@ -34,7 +38,7 @@ func main() {
 
 	if showTracks {
 		Config.Verbose = 0
-		discography, _ := readFile(file)
+		discography, _ := readFile(file, sortBy, sortOrder)
 		for _, track := range discography.Tracks {
 			fmt.Printf("%+v\n", track)
 		}
@@ -49,7 +53,7 @@ func main() {
 	fmt.Printf("creating %s playlist: %s\n", Config.Service, title)
 
 	// read provided file
-	discography, err := readFile(file)
+	discography, err := readFile(file, sortBy, sortOrder)
 	if err != nil {
 		log.Fatalf("Error reading XML file: %v", err)
 	}
