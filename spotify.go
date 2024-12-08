@@ -75,14 +75,9 @@ func setupSpotifyClient(title string, discography *Discography) {
 			}
 			trk := Track{Name: track.Name, Year: year, Orchestra: orchestra, Artist: track.Artist}
 			if inList(trk, tracks) {
-				if Config.Verbose > 0 {
-					fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
-				}
-				log.Println("")
+				fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
 			} else {
-				if Config.Verbose > 0 {
-					fmt.Printf("idx: %d track: %s\n", idx, query)
-				}
+				fmt.Printf("idx: %d track: %s\n", idx, query)
 				if err := addToSpotifyPlaylist(client, playlistID, query); err == nil {
 					// add track to local cache if was successfully added to playlist
 					cache.AddTrack(title, string(playlistID), trk)
