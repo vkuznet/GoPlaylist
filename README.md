@@ -114,6 +114,14 @@ step and your playlist will be build in corresponding service
 ```
 The tool will generate a URL for you to complete the authentication process. Once authorized, your playlist will be created.
 
+You may use different options to construct precise playlist, e.g. read all Juan
+D'Arienzo discography files, select vals tracks, order them by year and
+construct YouTube playlist from them:
+
+```
+./goplaylist -config youtube2.json -file="/path/Juan D'Arienzo*.xml" -sortBy=year -filterBy='{"genre":"vals"}' -tracks -title "Juan D'Arienzo - Vals"
+```
+
 
 #### Example XML playlist
 ```
