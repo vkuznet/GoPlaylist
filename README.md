@@ -59,6 +59,32 @@ To parse a playlist and print tracks:
 # the same operation using csv file
 ./goplaylist -config config.json -file=testplaylist.csv -tracks
 
+# use sortBy option
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year
+{Orchestra:Francisco Canaro Year:1927-02-17 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Francisco Canaro Year:1929-04-17 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Francisco Canaro Year:1933-02-14 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Orquesta Tipica Victor Year:1938-04-18 Name:Sin rumbo fijo Artist: Genre:vals Vocal:Ángel Vargas}
+{Orchestra:Angel D'Agostino Year:1945-11-02 Name:La cumparsita Artist: Genre:Tango Vocal:Ángel Vargas}
+{Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1952 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
+{Orchestra:Carlos Di Sarli Year:1956-09-27 Name:A la luz del candil Artist: Genre:tango Vocal:Jorge Durán}
+{Orchestra:Anibal Troilo Year:1963-04-25 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+
+# use multiple keys for sortBy option
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=orchestra,year
+{Orchestra:Angel D'Agostino Year:1945-11-02 Name:La cumparsita Artist: Genre:Tango Vocal:Ángel Vargas}
+{Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1952 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
+{Orchestra:Anibal Troilo Year:1963-04-25 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Carlos Di Sarli Year:1956-09-27 Name:A la luz del candil Artist: Genre:tango Vocal:Jorge Durán}
+{Orchestra:Francisco Canaro Year:1927-02-17 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Francisco Canaro Year:1929-04-17 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Francisco Canaro Year:1933-02-14 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Orquesta Tipica Victor Year:1938-04-18 Name:Sin rumbo fijo Artist: Genre:vals Vocal:Ángel Vargas}
+
 # matches only specific orchestra
 ./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"orchestra": "anibal troilo"}'
 {Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
