@@ -194,75 +194,116 @@ func (d *Discography) filterBy(filters map[string]string) {
 
 // helper function to read XML (discography) file
 func readXMLFile(filename string) (*Discography, error) {
-	xmlFile, err := os.Open(filename)
+	// Match files using the provided filename pattern
+	files, err := filepath.Glob(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to match files with pattern %s: %v", filename, err)
 	}
-	defer xmlFile.Close()
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files matched the pattern %s", filename)
+	}
 
-	byteValue, _ := ioutil.ReadAll(xmlFile)
-	var discography Discography
-	xml.Unmarshal(byteValue, &discography)
+	combinedDiscography := &Discography{}
 
-	var tracks []Track
-	for _, track := range discography.Tracks {
-		if track.Orchestra == "" && discography.Orchestra != "" {
-			track.Orchestra = discography.Orchestra
-			tracks = append(tracks, track)
+	for _, fileName := range files {
+		xmlFile, err := os.Open(fileName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open file %s: %v", fileName, err)
+		}
+		defer xmlFile.Close()
+
+		byteValue, err := ioutil.ReadAll(xmlFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %s: %v", fileName, err)
+		}
+
+		var discography Discography
+		err = xml.Unmarshal(byteValue, &discography)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal XML in file %s: %v", fileName, err)
+		}
+
+		// Patch orchestra in tracks if necessary
+		for _, track := range discography.Tracks {
+			if track.Orchestra == "" && discography.Orchestra != "" {
+				track.Orchestra = discography.Orchestra
+			}
+			combinedDiscography.Tracks = append(combinedDiscography.Tracks, track)
+		}
+
+		// Set the orchestra attribute if it's not already set
+		if combinedDiscography.Orchestra == "" && discography.Orchestra != "" {
+			combinedDiscography.Orchestra = discography.Orchestra
 		}
 	}
-	if len(tracks) > 0 {
-		discography.Tracks = tracks
-	}
 
-	return &discography, nil
+	return combinedDiscography, nil
 }
 
 // helper function to read CSV (discography) file
 func readCSVFile(filename string) (*Discography, error) {
-	file, err := os.Open(filename)
+	// Match files using the provided filename pattern
+	files, err := filepath.Glob(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to match files with pattern %s: %v", filename, err)
 	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	reader.FieldsPerRecord = -1 // Allow variable number of fields per line
-
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files matched the pattern %s", filename)
 	}
 
-	var discography Discography
-	for _, record := range records {
-		if len(record) < 3 {
-			continue // Skip rows with insufficient data
-		}
-		// NOTE: record should match String() method of Track object above
-		track := Track{
-			Orchestra: record[0],
-			Year:      record[1],
-			Name:      record[2],
-		}
-		if len(record) == 4 {
-			track.Artist = record[3]
-		} else if len(record) == 5 {
-			track.Genre = record[4]
-		} else if len(record) == 6 {
-			track.Vocal = record[5]
-		}
-		discography.Tracks = append(discography.Tracks, track)
-	}
+	combinedDiscography := &Discography{}
 
-	if Config.Verbose > 1 {
-		fmt.Println("Parsed discography from CSV:")
+	for _, fileName := range files {
+		csvFile, err := os.Open(fileName)
+		if err != nil {
+			return nil, err
+		}
+		defer csvFile.Close()
+
+		reader := csv.NewReader(csvFile)
+		reader.FieldsPerRecord = -1 // Allow variable number of fields per line
+
+		records, err := reader.ReadAll()
+		if err != nil {
+			return nil, err
+		}
+
+		var discography Discography
+		for _, record := range records {
+			if len(record) < 3 {
+				continue // Skip rows with insufficient data
+			}
+			// NOTE: record should match String() method of Track object above
+			track := Track{
+				Orchestra: record[0],
+				Year:      record[1],
+				Name:      record[2],
+			}
+			if len(record) == 4 {
+				track.Artist = record[3]
+			} else if len(record) == 5 {
+				track.Genre = record[4]
+			} else if len(record) == 6 {
+				track.Vocal = record[5]
+			}
+			discography.Tracks = append(discography.Tracks, track)
+		}
+
+		// Patch orchestra in tracks if necessary
 		for _, track := range discography.Tracks {
-			fmt.Printf("track: %+v\n", track)
+			if track.Orchestra == "" && discography.Orchestra != "" {
+				track.Orchestra = discography.Orchestra
+			}
+			combinedDiscography.Tracks = append(combinedDiscography.Tracks, track)
 		}
-	}
 
-	return &discography, nil
+		// Set the orchestra attribute if it's not already set
+		if combinedDiscography.Orchestra == "" && discography.Orchestra != "" {
+			combinedDiscography.Orchestra = discography.Orchestra
+		}
+
+	}
+	return combinedDiscography, nil
 }
 
 // helper function to read (discography) file
