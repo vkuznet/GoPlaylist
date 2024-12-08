@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -24,6 +25,8 @@ func main() {
 	flag.BoolVar(&showTracks, "tracks", false, "show tracks and exit")
 	var sortBy string
 	flag.StringVar(&sortBy, "sortBy", "", "sort tracks by attribute: orchestra, artist, year, genre, vocal")
+	var filterBy string
+	flag.StringVar(&filterBy, "filterBy", "", "filter tracks conditions: {key:value, key:value}")
 	var sortOrder string
 	flag.StringVar(&sortOrder, "sortOrder", "ascending", "sort order: ascending or descending")
 	flag.Parse()
@@ -36,9 +39,17 @@ func main() {
 		log.SetFlags(log.LstdFlags | log.Lshortfile)
 	}
 
+	var filters map[string]string
+	if filterBy != "" {
+		err := json.Unmarshal([]byte(filterBy), &filters)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	if showTracks {
 		Config.Verbose = 0
-		discography, _ := readFile(file, sortBy, sortOrder)
+		discography, _ := readFile(file, sortBy, sortOrder, filters)
 		for _, track := range discography.Tracks {
 			fmt.Printf("%+v\n", track)
 		}
@@ -53,7 +64,7 @@ func main() {
 	fmt.Printf("creating %s playlist: %s\n", Config.Service, title)
 
 	// read provided file
-	discography, err := readFile(file, sortBy, sortOrder)
+	discography, err := readFile(file, sortBy, sortOrder, filters)
 	if err != nil {
 		log.Fatalf("Error reading XML file: %v", err)
 	}
