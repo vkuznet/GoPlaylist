@@ -58,6 +58,23 @@ To parse a playlist and print tracks:
 ./goplaylist -config config.json -file=testplaylist.xml -tracks
 # the same operation using csv file
 ./goplaylist -config config.json -file=testplaylist.csv -tracks
+
+# matches only specific orchestra
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"orchestra": "anibal troilo"}'
+{Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1952 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+{Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
+{Orchestra:Anibal Troilo Year:1963-04-25 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
+
+# matches only specific genre
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"genre":"vals"}'
+{Orchestra:Orquesta Tipica Victor Year:1938-04-18 Name:Sin rumbo fijo Artist: Genre:vals Vocal:Ángel Vargas}
+{Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
+
+# use sort by and filter by filters, matches both genre and orchestra
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"genre":"Vals", "orchestra": "anibal troilo"}'
+{Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
+
 ```
 
 To upload a playlist to Spotify or YouTube:
