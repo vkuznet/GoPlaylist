@@ -24,9 +24,13 @@ Ensure the port (e.g., 8888) is available on your system and matches the `callba
 For YouTube integration:
 
 1. Visit the [Google Console](https://console.cloud.google.com)
-2. Navigate to `API & Services -> OAuth consent screen`.
-3. Create a new app, set it as a Web Application, and configure the callback URL as `http://localhost:8888/callback`.
-Ensure the port matches the `callback_port` value in `config.json`.
+2. Create new project
+3. Create new OAuth client (see `API & Services -> Oauth consent screen`) as web application and configure URIs:
+  - Authorized JavaScript origins, e.g. `http://localhost:8888`
+  - Authorized redirect URIs, e.g. `http://localhost:8888/callback`,
+    i.e. it should match the `callback_port` value in `config.json`.
+4. add your google email to Test users (under Audience section)
+5. enable YouTube Data API v3
 
 
 ### Configuration and Usage
