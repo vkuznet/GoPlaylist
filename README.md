@@ -77,7 +77,8 @@ To parse a playlist and print tracks:
 {Orchestra:Anibal Troilo Year:1963-04-25 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
 
 # use multiple keys for sortBy option
-./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=orchestra,year
+./goplaylist -config spotify.json -file=testplaylist.xml \
+    -tracks -sortBy=orchestra,year
 {Orchestra:Angel D'Agostino Year:1945-11-02 Name:La cumparsita Artist: Genre:Tango Vocal:Ángel Vargas}
 {Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
 {Orchestra:Anibal Troilo Year:1952 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
@@ -90,14 +91,16 @@ To parse a playlist and print tracks:
 {Orchestra:Orquesta Tipica Victor Year:1938-04-18 Name:Sin rumbo fijo Artist: Genre:vals Vocal:Ángel Vargas}
 
 # matches only specific orchestra
-./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"orchestra": "anibal troilo"}'
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks \
+    -sortBy=year -filterBy='{"orchestra": "anibal troilo"}'
 {Orchestra:Anibal Troilo Year:1951 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
 {Orchestra:Anibal Troilo Year:1952 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
 {Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
 {Orchestra:Anibal Troilo Year:1963-04-25 Name:La cumparsita Artist: Genre:Tango Vocal:Instrumental}
 
 # matches only specific genre
-./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"genre":"vals"}'
+./goplaylist -config spotify.json -file=testplaylist.xml -tracks \
+    -sortBy=year -filterBy='{"genre":"vals"}'
 {Orchestra:Orquesta Tipica Victor Year:1938-04-18 Name:Sin rumbo fijo Artist: Genre:vals Vocal:Ángel Vargas}
 {Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
 
@@ -123,7 +126,9 @@ D'Arienzo discography files, select vals tracks, order them by year and
 construct YouTube playlist from them:
 
 ```
-./goplaylist -config youtube2.json -file="/path/Juan D'Arienzo*.xml" -sortBy=year -filterBy='{"genre":"vals"}' -tracks -title "Juan D'Arienzo - Vals"
+./goplaylist -config config.json \
+    -file="/path/Juan D'Arienzo*.xml" -sortBy=year \
+    -filterBy='{"genre":"vals"}' -tracks -title "Juan D'Arienzo - Vals"
 ```
 
 
@@ -141,7 +146,6 @@ construct YouTube playlist from them:
 Carlos Di Sarli,1956-09-27,A la luz del candil
 Orquesta Tipica Victor,1938-04-18,Sin rumbo fijo
 ```
-
 
 ### Limitations
 
