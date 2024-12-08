@@ -136,7 +136,7 @@ func TestReadFile(t *testing.T) {
 	csvFile.Close()
 
 	// Test readFile with CSV
-	discography, err := readFile(csvFilename, "", "")
+	discography, err := readFile(csvFilename, "", "", nil)
 	if err != nil {
 		t.Fatalf("Failed to read CSV file: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestReadFile(t *testing.T) {
 	}
 
 	// Test readFile with XML
-	discography, err = readFile(xmlFilename, "", "")
+	discography, err = readFile(xmlFilename, "", "", nil)
 	if err != nil {
 		t.Fatalf("Failed to read XML file: %v", err)
 	}
@@ -171,7 +171,7 @@ func TestReadFile(t *testing.T) {
 	//     }
 
 	// Test readFile with XML
-	discography, err = readFile(xmlFilename, "", "")
+	discography, err = readFile(xmlFilename, "", "", nil)
 	if err != nil {
 		t.Fatalf("Failed to read CSV file: %v", err)
 	}
@@ -251,5 +251,95 @@ func TestSortBy(t *testing.T) {
 				t.Errorf("Failed %s\nGot: %+v\nExpected: %+v", test.description, d.Tracks, test.expected)
 			}
 		})
+	}
+}
+
+func TestSortByMultipleKeys(t *testing.T) {
+	d := &Discography{
+		Tracks: []Track{
+			{Name: "Song A", Year: "2000", Orchestra: "Orch2"},
+			{Name: "Song B", Year: "1999", Orchestra: "Orch1"},
+			{Name: "Song C", Year: "2000", Orchestra: "Orch1"},
+			{Name: "Song D", Year: "1998", Orchestra: "Orch2"},
+		},
+	}
+
+	// Sort by year in ascending order
+	d.sortBy("year", "ascending")
+
+	expectedOrder := []string{"Song D", "Song B", "Song A", "Song C"}
+	for i, track := range d.Tracks {
+		if track.Name != expectedOrder[i] {
+			t.Errorf("Expected %s, but got %s", expectedOrder[i], track.Name)
+		}
+	}
+
+	// Sort by orchestra and then by year
+	d.sortBy("orchestra,year", "ascending")
+
+	expectedOrder = []string{"Song B", "Song C", "Song D", "Song A"}
+	for i, track := range d.Tracks {
+		if track.Name != expectedOrder[i] {
+			t.Errorf("Expected %s, but got %s", expectedOrder[i], track.Name)
+		}
+	}
+}
+
+func TestFilterBy(t *testing.T) {
+	d := &Discography{
+		Tracks: []Track{
+			{Name: "Song A", Year: "2000", Orchestra: "Orch1", Genre: "Classical"},
+			{Name: "Song B", Year: "1999", Orchestra: "Orch1", Genre: "Jazz"},
+			{Name: "Song C", Year: "2000", Orchestra: "Orch2", Genre: "Classical"},
+			{Name: "Song D", Year: "1998", Orchestra: "Orch2", Genre: "Jazz"},
+		},
+	}
+
+	// Filter by "orchestra" = "Orch1"
+	d.filterBy(map[string]string{
+		"orchestra": "Orch1",
+	})
+
+	expectedTracks := []Track{
+		{Name: "Song A", Year: "2000", Orchestra: "Orch1", Genre: "Classical"},
+		{Name: "Song B", Year: "1999", Orchestra: "Orch1", Genre: "Jazz"},
+	}
+
+	if len(d.Tracks) != len(expectedTracks) {
+		t.Fatalf("Expected %d tracks, but got %d", len(expectedTracks), len(d.Tracks))
+	}
+
+	for i, track := range d.Tracks {
+		if track.Name != expectedTracks[i].Name || track.Orchestra != expectedTracks[i].Orchestra {
+			t.Errorf("Track mismatch. Expected %+v, but got %+v", expectedTracks[i], track)
+		}
+	}
+
+	// Filter by "orchestra" = "Orch1" and "genre" = "Classical"
+	d = &Discography{
+		Tracks: []Track{
+			{Name: "Song A", Year: "2000", Orchestra: "Orch1", Genre: "Classical"},
+			{Name: "Song B", Year: "1999", Orchestra: "Orch1", Genre: "Jazz"},
+			{Name: "Song C", Year: "2000", Orchestra: "Orch2", Genre: "Classical"},
+			{Name: "Song D", Year: "1998", Orchestra: "Orch2", Genre: "Jazz"},
+		},
+	}
+	d.filterBy(map[string]string{
+		"orchestra": "Orch1",
+		"genre":     "Classical",
+	})
+
+	expectedTracks = []Track{
+		{Name: "Song A", Year: "2000", Orchestra: "Orch1", Genre: "Classical"},
+	}
+
+	if len(d.Tracks) != len(expectedTracks) {
+		t.Fatalf("Expected %d tracks, but got %d", len(expectedTracks), len(d.Tracks))
+	}
+
+	for i, track := range d.Tracks {
+		if track.Name != expectedTracks[i].Name || track.Orchestra != expectedTracks[i].Orchestra || track.Genre != expectedTracks[i].Genre {
+			t.Errorf("Track mismatch. Expected %+v, but got %+v", expectedTracks[i], track)
+		}
 	}
 }
