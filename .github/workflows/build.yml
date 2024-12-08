@@ -56,12 +56,25 @@ jobs:
         done
         cd -
 
-        echo "Creating tarball..."
-        tar cfz goplaylist.tar.gz goplaylst_* itunesxml2csv_*
-
         echo "Generate RELEASE.MD and LAST_CHANGES.md..."
         ./gen_release_log.sh
         ./extract_last_changes.sh
+
+    - name: Upload executables
+      uses: actions/upload-artifact@v3
+      with:
+        name: goplaylst-binaries
+        path: |
+          goplaylst_*
+        retention-days: 7
+
+    - name: Upload iTunesXML2CSV executables
+      uses: actions/upload-artifact@v3
+      with:
+        name: itunesxml2csv-binaries
+        path: |
+          itunesxml2csv_*
+        retention-days: 7
 
     - name: Create Release
       id: create_release
@@ -70,7 +83,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         bodyFile: "LAST_CHANGES.md"
-        artifacts: "goplaylist.tar.gz"
 
     - name: Get the Ref
       id: get-ref
