@@ -60,6 +60,9 @@ To compile and run the program:
 2. **Run the program**:
    ```bash
    ./findSimilarTracks -input "/path/*.xml" -output output.xml
+
+   # if you want final statistics about tracks use -stats flag
+   ./findSimilarTracks -input "/path/*.xml" -output output.xml -stats
    ```
 
    Replace `/path/*.xml` with the directory and pattern of your input files.

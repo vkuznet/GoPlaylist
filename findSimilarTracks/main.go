@@ -115,15 +115,19 @@ func writeXMLFile(outputFile string, tracks []Track) error {
 }
 
 func main() {
-	inputPattern := flag.String("input", "*.xml", "Input XML files pattern")
-	outputFile := flag.String("output", "output.xml", "Output XML file")
+	var inputPattern, outputFile string
+	var verbose, stats bool
+	flag.StringVar(&inputPattern, "input", "*.xml", "Input XML files pattern")
+	flag.StringVar(&outputFile, "output", "output.xml", "Output XML file")
+	flag.BoolVar(&verbose, "verbose", false, "verbose output")
+	flag.BoolVar(&stats, "stats", false, "stats output")
 	flag.Parse()
 
 	// Use filepath.Walk to collect all matching files recursively
-	arr := strings.Split(*inputPattern, ".")
+	arr := strings.Split(inputPattern, ".")
 	ext := arr[len(arr)-1]
 	var files []string
-	err := filepath.Walk(filepath.Dir(*inputPattern), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(filepath.Dir(inputPattern), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -138,8 +142,10 @@ func main() {
 	}
 
 	// Print each individual file name
-	for _, fname := range files {
-		fmt.Println("Found", fname)
+	if verbose {
+		for _, fname := range files {
+			fmt.Println("Found", fname)
+		}
 	}
 
 	var allTracks []Track
@@ -151,15 +157,18 @@ func main() {
 		}
 		allTracks = append(allTracks, tracks...)
 	}
-	fmt.Printf("Collected %d tracks from %d files", len(allTracks), len(files))
 
 	similarTracks := findSimilarTracks(allTracks)
 
-	err = writeXMLFile(*outputFile, similarTracks)
+	fmt.Printf("Collected %d tracks from %d files", len(allTracks), len(files))
+	err = writeXMLFile(outputFile, similarTracks)
 	if err != nil {
 		fmt.Printf("Error writing output file: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Successfully wrote %d similar tracks to %s\n", len(similarTracks), *outputFile)
+	fmt.Printf("Successfully wrote %d similar tracks to %s\n", len(similarTracks), outputFile)
+	if stats {
+		PrintStats(similarTracks)
+	}
 }
