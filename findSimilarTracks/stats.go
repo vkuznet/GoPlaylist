@@ -10,7 +10,7 @@ func PrintStats(tracks []Track) {
 	stats := make(map[string]map[string]map[string]struct{}) // name -> orchestra -> year -> struct{}
 
 	for _, track := range tracks {
-		tName := strings.ToLower(track.Name)
+		tName := capitalize(track.Name)
 		if track.Year == "" {
 			track.Year = "19xx"
 		}
@@ -23,6 +23,7 @@ func PrintStats(tracks []Track) {
 		stats[tName][track.Orchestra][track.Year] = struct{}{}
 	}
 
+	fmt.Println("### Statistics")
 	for name, orchestras := range stats {
 		fmt.Printf("Track: %s\n", name)
 		total := 0
