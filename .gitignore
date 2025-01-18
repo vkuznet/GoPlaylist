@@ -30,3 +30,6 @@ spotify.json
 youtube.json
 config.json
 iTunesXML2CSV/iTunesXML2CSV
+trackRecordings/trackRecordings
+trackRecordings/log
+trackRecordings/out.xml
