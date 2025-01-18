@@ -1,7 +1,7 @@
-# README: findSimilarTracks
+# README: trackRecordings
 
 ## Description
-`findSimilarTracks` is a Go program designed to process multiple XML files containing information about musical tracks. The program identifies tracks with the same name but different metadata (e.g., `year` or `orchestra`), and generates a consolidated XML file containing these "similar" tracks. 
+`trackRecordings` is a Go program designed to process multiple XML files containing information about musical tracks. The program identifies tracks with the same name but different metadata (e.g., `year` or `orchestra`), and generates a consolidated XML file containing these "similar" tracks. 
 
 The output XML file contains the filtered tracks sorted by their names.
 
@@ -54,15 +54,15 @@ When the program processes the input XML files, it generates an output file (`ou
 To compile and run the program:
 1. **Build the executable**:
    ```bash
-   go build -o findSimilarTracks
+   go build -o trackRecordings
    ```
 
 2. **Run the program**:
    ```bash
-   ./findSimilarTracks -input "/path/*.xml" -output output.xml
+   ./trackRecordings -input "/path/*.xml" -output output.xml
 
    # if you want final statistics about tracks use -stats flag
-   ./findSimilarTracks -input "/path/*.xml" -output output.xml -stats
+   ./trackRecordings -input "/path/*.xml" -output output.xml -stats
    ```
 
    Replace `/path/*.xml` with the directory and pattern of your input files.
@@ -79,4 +79,4 @@ To compile and run the program:
 
 ---
 
-Enjoy using `findSimilarTracks` to manage and process your music discography data!
+Enjoy using `trackRecordings` to manage and process your music discography data!

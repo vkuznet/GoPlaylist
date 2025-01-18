@@ -49,7 +49,8 @@ func findSimilarTracks(tracks []Track) []Track {
 	unique := make(map[string]Track)
 	for _, track := range result {
 		tName := capitalize(track.Name)
-		key := fmt.Sprintf("%s|%s|%s", tName, track.Year, track.Orchestra)
+		//         key := fmt.Sprintf("%s|%s|%s", tName, track.Year, track.Orchestra)
+		key := fmt.Sprintf("%s|%s|%s|%s", tName, track.Year, track.Orchestra, capitalize(track.Genre))
 		unique[key] = track
 	}
 

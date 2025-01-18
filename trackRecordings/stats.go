@@ -9,6 +9,7 @@ import (
 func PrintStats(tracks []Track) {
 	stats := make(map[string]map[string]map[string]struct{}) // name -> orchestra -> year -> struct{}
 
+	tmap := make(map[string]string) // name -> genre
 	for _, track := range tracks {
 		tName := capitalize(track.Name)
 		if track.Year == "" {
@@ -21,11 +22,16 @@ func PrintStats(tracks []Track) {
 			stats[tName][track.Orchestra] = make(map[string]struct{})
 		}
 		stats[tName][track.Orchestra][track.Year] = struct{}{}
+		tmap[tName] = capitalize(track.Genre)
 	}
 
 	fmt.Println("### Statistics")
-	for name, orchestras := range stats {
-		fmt.Printf("Track: %s\n", name)
+	for tName, orchestras := range stats {
+		if genre, ok := tmap[tName]; ok {
+			fmt.Printf("Track: %s (%s)\n", tName, genre)
+		} else {
+			fmt.Printf("Track: %s\n", tName)
+		}
 		total := 0
 		for orchestra, years := range orchestras {
 			yearsList := make([]string, 0, len(years))
@@ -33,7 +39,7 @@ func PrintStats(tracks []Track) {
 				yearsList = append(yearsList, year)
 			}
 			sort.Strings(yearsList)
-			fmt.Printf("  Performed %d times by %s in years: %s\n", len(years), orchestra, strings.Join(yearsList, ", "))
+			fmt.Printf("  Recorded %d times by %s in years: %s\n", len(years), orchestra, strings.Join(yearsList, ", "))
 			total += len(years)
 		}
 		fmt.Printf("- total %d times\n", total)
