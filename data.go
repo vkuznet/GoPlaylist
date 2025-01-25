@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -148,8 +149,18 @@ func (d *Discography) filterBy(filters map[string]string) {
 					match = false
 				}
 			case "year":
-				if strings.ToLower(track.Year) != strings.ToLower(value) {
-					match = false
+				// Try compiling as a regex
+				re, err := regexp.Compile("^" + value + "$") // Ensure full match
+				if err != nil {
+					// If it's not a regex, do an exact match
+					if strings.ToLower(track.Year) != strings.ToLower(value) {
+						match = false
+					}
+				} else {
+					// Use regex match
+					if !re.MatchString(track.Year) {
+						match = false
+					}
 				}
 			case "name":
 				if strings.ToLower(track.Name) != strings.ToLower(value) {

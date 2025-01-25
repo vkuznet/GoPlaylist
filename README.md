@@ -108,6 +108,9 @@ To parse a playlist and print tracks:
 ./goplaylist -config spotify.json -file=testplaylist.xml -tracks -sortBy=year -filterBy='{"genre":"Vals", "orchestra": "anibal troilo"}'
 {Orchestra:Anibal Troilo Year:1953 Name:Vuelve la serenata Artist: Genre:Vals Vocal:Raúl Beron, Jorge Casal}
 
+# use regexp to match specific tracks, e.g. all tracks from certain time range
+# use specific genre
+./goplaylist -config youtube.json -file="/path/*.xml" -sortBy=year -filterBy='{"genre":"milonga", "year": "193[0-9]"}' -tracks
 ```
 
 To upload a playlist to Spotify or YouTube:
