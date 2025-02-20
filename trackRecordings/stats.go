@@ -11,17 +11,17 @@ func PrintStats(tracks []Track) {
 
 	tmap := make(map[string]string) // name -> genre
 	for _, track := range tracks {
-		tName := capitalize(track.Name)
+		tName := capitalize(ConvertUTFToASCII(track.Name))
 		if track.Year == "" {
 			track.Year = "19xx"
 		}
 		if _, ok := stats[tName]; !ok {
 			stats[tName] = make(map[string]map[string]struct{})
 		}
-		if _, ok := stats[tName][track.Orchestra]; !ok {
-			stats[tName][track.Orchestra] = make(map[string]struct{})
+		if _, ok := stats[tName][orchestra(track.Orchestra)]; !ok {
+			stats[tName][orchestra(track.Orchestra)] = make(map[string]struct{})
 		}
-		stats[tName][track.Orchestra][track.Year] = struct{}{}
+		stats[tName][orchestra(track.Orchestra)][track.Year] = struct{}{}
 		tmap[tName] = capitalize(track.Genre)
 	}
 

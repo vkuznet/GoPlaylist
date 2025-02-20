@@ -28,7 +28,7 @@ func findSimilarTracks(tracks []Track) []Track {
 
 	// Group tracks by name
 	for _, track := range tracks {
-		tName := capitalize(track.Name)
+		tName := capitalize(ConvertUTFToASCII(track.Name))
 		seen[tName] = append(seen[tName], track)
 	}
 
@@ -37,7 +37,7 @@ func findSimilarTracks(tracks []Track) []Track {
 		if len(group) > 1 {
 			for i := 0; i < len(group)-1; i++ {
 				for j := i + 1; j < len(group); j++ {
-					if group[i].Year != group[j].Year || group[i].Orchestra != group[j].Orchestra {
+					if group[i].Year != group[j].Year || orchestra(group[i].Orchestra) != orchestra(group[j].Orchestra) {
 						result = append(result, group[i], group[j])
 					}
 				}
@@ -48,9 +48,9 @@ func findSimilarTracks(tracks []Track) []Track {
 	// Remove duplicates from result
 	unique := make(map[string]Track)
 	for _, track := range result {
-		tName := capitalize(track.Name)
+		tName := capitalize(ConvertUTFToASCII(track.Name))
 		//         key := fmt.Sprintf("%s|%s|%s", tName, track.Year, track.Orchestra)
-		key := fmt.Sprintf("%s|%s|%s|%s", tName, track.Year, track.Orchestra, capitalize(track.Genre))
+		key := fmt.Sprintf("%s|%s|%s|%s", tName, track.Year, orchestra(track.Orchestra), capitalize(track.Genre))
 		unique[key] = track
 	}
 

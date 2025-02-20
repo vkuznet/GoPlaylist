@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // helper function to write XML file
@@ -53,7 +55,7 @@ func parseXMLFile(filename string) ([]Track, error) {
 	for i := range discography.Tracks {
 		// Patch orchestra if missing
 		if discography.Tracks[i].Orchestra == "" {
-			discography.Tracks[i].Orchestra = discography.Orchestra
+			discography.Tracks[i].Orchestra = orchestra(discography.Orchestra)
 		}
 	}
 
@@ -67,4 +69,31 @@ func capitalize(word string) string {
 	}
 	word = strings.ToLower(word)
 	return string(unicode.ToUpper(rune(word[0]))) + strings.ToLower(word[1:])
+}
+
+// helper function convertUTFToASCII removes diacritics
+func convertUTFToASCII(input string) string {
+	// Normalize the string to decompose characters (NFD form)
+	t := norm.NFD.String(input)
+
+	// Filter out non-spacing marks (diacritics)
+	var result strings.Builder
+	for _, r := range t {
+		if unicode.IsMark(r) {
+			continue // Skip diacritical marks
+		}
+		result.WriteRune(r)
+	}
+	return result.String()
+}
+
+// ConvertUTFToASCII removes diacritics and converts the string to lowercase ASCII
+func ConvertUTFToASCII(input string) string {
+	// Convert to lowercase
+	return strings.ToLower(convertUTFToASCII(input))
+}
+
+// helper function to normalize track orchestra
+func orchestra(o string) string {
+	return convertUTFToASCII(strings.Trim(strings.Split(o, "(")[0], " "))
 }
