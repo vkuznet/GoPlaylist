@@ -74,8 +74,8 @@ func main() {
 		Config.Verbose = 0
 		discography, _ := readFile(file, sortBy, sortOrder, filters)
 		discography.removeDuplicateTracks()
-		for _, track := range discography.Tracks {
-			fmt.Printf("%+v\n", track)
+		for idx, track := range discography.Tracks {
+			fmt.Printf("%4d %+v\n", idx, track)
 		}
 		return
 	}

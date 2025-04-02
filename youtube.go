@@ -76,9 +76,9 @@ func setupYouTubeService(title string, discography *Discography) {
 			query := fmt.Sprintf("%s %s %v", track.Name, orchestra, year)
 			trk := Track{Name: track.Name, Year: year, Orchestra: orchestra, Artist: track.Artist}
 			if inList(trk, tracks) {
-				fmt.Printf("idx: %d query: %s, already exist in playlist, skipping...\n", idx, query)
+				fmt.Printf("idx: %4d query: %s, already exist in playlist, skipping...\n", idx, query)
 			} else {
-				fmt.Printf("idx: %d track: %s\n", idx, query)
+				fmt.Printf("idx: %4d track: %s\n", idx, query)
 				if err := addToYoutubePlaylist(service, playlistID, query); err == nil {
 					// add track to local cache if was successfully added to playlist
 					cache.AddTrack(title, playlistID, trk)
