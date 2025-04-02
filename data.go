@@ -203,6 +203,26 @@ func (d *Discography) filterBy(filters map[string]string) {
 	d.Tracks = filteredTracks
 }
 
+// Ensure unique tracks in the Discography struct
+func (d *Discography) removeDuplicateTracks() {
+	seen := make(map[string]bool)
+	uniqueTracks := []Track{}
+
+	for _, track := range d.Tracks {
+		// Create a unique key for each track
+		year := strings.Split(track.Year, "-")[0]
+		key := fmt.Sprintf("%s|%s|%s|%s",
+			track.Orchestra, year, track.Name, track.Genre)
+
+		if !seen[key] {
+			seen[key] = true
+			uniqueTracks = append(uniqueTracks, track)
+		}
+	}
+
+	d.Tracks = uniqueTracks
+}
+
 // helper function to read XML (discography) file
 func readXMLFile(filename string) (*Discography, error) {
 	// Match files using the provided filename pattern

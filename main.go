@@ -73,6 +73,7 @@ func main() {
 	if showTracks {
 		Config.Verbose = 0
 		discography, _ := readFile(file, sortBy, sortOrder, filters)
+		discography.removeDuplicateTracks()
 		for _, track := range discography.Tracks {
 			fmt.Printf("%+v\n", track)
 		}
@@ -84,6 +85,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading XML file: %v", err)
 	}
+	discography.removeDuplicateTracks()
 
 	// choose a client to use
 	cache = &Cache{}
