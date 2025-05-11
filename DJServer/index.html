@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Music Player</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f4f4;
+        }
+        h1, #now-playing, #total-time {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 90%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        td.title, td.artist {
+            max-width: 30%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        td.actions {
+            width: 30%;
+            text-align: center;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr.tango { background-color: #ebebeb; }
+        tr.vals { background-color: #c8e6c9; }
+        tr.milonga { background-color: #ffe0b2; }
+        tr.playing { background-color: #0096ff !important; font-weight: bold; }
+        button {
+            margin: 2px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+<h1>Music Player</h1>
+
+<button onclick="loadPlaylist()" style="display: block; margin: 10px auto;">Reload Playlist</button>
+
+<div id="now-playing">Now Playing: <span id="current-track">None</span></div>
+<div id="total-time">Total Playlist Time: <span id="playlist-time">--:--</span></div>
+
+<table id="playlist">
+    <tr>
+        <th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th>
+    </tr>
+</table>
+
+<script>
+let currentAudio = null;
+let currentRow = null;
+
+async function loadPlaylist() {
+    const res = await fetch('/playlist');
+    const data = await res.json();
+
+    const table = document.getElementById('playlist');
+    table.innerHTML = `
+        <tr>
+            <th>Index</th><th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th>
+        </tr>
+    `;
+
+    let totalDuration = 0;
+
+    data.forEach(track => {
+        const row = document.createElement('tr');
+        let genreClass = '';
+        if (track.Genre && track.Genre.toLowerCase() === 'tango') genreClass = 'tango';
+        else if (track.Genre && track.Genre.toLowerCase() === 'vals') genreClass = 'vals';
+        else if (track.Genre && track.Genre.toLowerCase() === 'milonga') genreClass = 'milonga';
+        row.className = genreClass;
+
+        row.innerHTML = `
+            <td>${track.Index || '-'}</td>
+            <td class="title">${track.Title || track.Filename}</td>
+            <td class="artist">${track.Artist || '-'}</td>
+            <td>${track.Genre || '-'}</td>
+            <td>${track.Year || '-'}</td>
+            <td class="time">00:00 / --:--</td>
+            <td class="actions">
+                <button onclick="playTrack(this)">Play</button>
+                <button onclick="stopTrack()">Stop</button>
+                <button onclick="fadeOut()">Fade Out</button>
+                <audio src="/music/${track.Filename}"></audio>
+            </td>
+        `;
+        table.appendChild(row);
+
+        const audio = row.querySelector('audio');
+        audio.addEventListener('loadedmetadata', () => {
+            const durationCell = row.querySelector('.time');
+            durationCell.textContent = `00:00 / ${formatTime(audio.duration)}`;
+            totalDuration += audio.duration;
+            document.getElementById('playlist-time').textContent = formatTime(totalDuration);
+        });
+        audio.addEventListener('timeupdate', () => {
+            const timeCell = row.querySelector('.time');
+            timeCell.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+        });
+    });
+}
+
+function playTrack(btn) {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentRow.classList.remove('playing');
+    }
+
+    const row = btn.closest('tr');
+    const audio = row.querySelector('audio');
+    currentAudio = audio;
+    currentRow = row;
+
+    audio.volume = 1.0;
+    audio.play();
+    audio.onended = playNext;
+
+    row.classList.add('playing');
+    document.getElementById('current-track').textContent = row.cells[0].textContent;
+}
+
+function stopTrack() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentRow.classList.remove('playing');
+        document.getElementById('current-track').textContent = 'None';
+        currentAudio = null;
+        currentRow = null;
+    }
+}
+
+function playNext() {
+    if (!currentRow) return;
+    currentRow.classList.remove('playing');
+
+    let nextRow = currentRow.nextElementSibling;
+    while (nextRow && !nextRow.querySelector('audio')) {
+        nextRow = nextRow.nextElementSibling;
+    }
+
+    if (nextRow && nextRow.querySelector('audio')) {
+        const nextAudio = nextRow.querySelector('audio');
+        currentAudio = nextAudio;
+        currentRow = nextRow;
+        nextAudio.volume = 1.0;
+        nextAudio.play();
+        nextAudio.onended = playNext;
+
+        nextRow.classList.add('playing');
+        document.getElementById('current-track').textContent = nextRow.cells[0].textContent;
+    } else {
+        document.getElementById('current-track').textContent = 'None';
+        currentAudio = null;
+        currentRow = null;
+    }
+}
+
+function fadeOut() {
+    if (!currentAudio) return;
+    const step = 0.01;
+    const interval = 100;
+    // fade out duration is calculated from step and interval as following
+    // duration = (1 / 0.01) × 100 ms = 100 × 100 = 10,000 ms = 10 seconds
+    const fade = setInterval(() => {
+        if (currentAudio.volume > step) {
+            currentAudio.volume -= step;
+        } else {
+            clearInterval(fade);
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentRow.classList.remove('playing');
+            playNext();
+        }
+    }, interval);
+}
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '--:--';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+window.onload = loadPlaylist;
+</script>
+
+</body>
+</html>
+
