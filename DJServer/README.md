@@ -57,26 +57,13 @@ http://localhost:8080
 
 ---
 
-## 🖥️ Web Interface
-
-The frontend interface allows you to:
-
-* 🔁 Reload the playlist (scans the folder again)
-* ▶️ Play, ⏹️ Stop, or 🔉 Fade out current track
-* ⬆️⬇️ Reorder tracks to customize the playlist order
-* 📢 Visual indicators for currently playing track (highlighted row and track info above the table)
-
----
-
 ## 📂 Project Structure
 
 ```
 .
 ├── music/           # Folder for your music files
-├── cmd/
-│   └── copytracks/  # Helper tool to convert .m3u playlists into music folder
-├── static/
-│   └── index.html   # Embedded UI (via Go embed)
+├── copytracks       # Helper tool to convert .m3u playlsits into music folder 
+├── index.html       # Embedded UI
 ├── main.go          # DJServer implementation
 ├── Makefile         # Cross-platform build targets
 ├── README.md
