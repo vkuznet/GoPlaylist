@@ -8,6 +8,10 @@
             font-family: sans-serif;
             padding: 1em;
         }
+        #playlist-container {
+            width: 90%;
+            margin: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -23,27 +27,53 @@
         tr.milonga { background-color: var(--color-milonga, #ffe0b2); }
         tr.playing { background-color: var(--color-playing, #0096ff); color: white; }
         tr.gap-track { font-style: italic; color: gray; }
-        #settings-modal {
+        #settings-modal, #json-editor-modal {
             display:none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
             background: #fff; padding: 20px; border: 1px solid #ccc; z-index: 1000;
+            max-width: 90%;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+        }
+        .current-track-info {
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .middle {
+            margin: 0;
+            display: flex;
+            justify-content: center; /* Horizontal center */
+            align-items: center;     /* Vertical center */
+            flex-direction: column;  /* Stack children vertically */
+            text-align: center;
         }
     </style>
 </head>
 <body>
-<h1>DJ Playlist</h1>
-<button onclick="openSettings()">Settings</button>
-<p>Total Playlist Time: <span id="playlist-time">00:00</span></p>
-<table id="playlist"></table>
+  <div class="middle">
+    <h1>DJ Playlist</h1>
+    <button onclick="openSettings()">Settings</button>
+    <div id="info-bar">
+        Total playlist time: <span id="playlist-time">00:00</span> &nbsp;&nbsp;
+        <span id="current-track-info" class="current-track-info"></span>
+    </div>
+  </div>
+<div id="playlist-container">
+    <table id="playlist"></table>
+</div>
 
 <div id="settings-modal">
     <h2>Settings</h2>
     <label>Show Gap Tracks: <input type="checkbox" id="show-gap-tracks"></label><br><br>
-    <label>Fadeout Duration (seconds): <input type="number" id="fadeout-duration" min="0" step="0.1"></label><br><br>
+    <label>Fadeout Duration (seconds): <input type="number" id="fadeout-duration" min="5" step="0.1"></label><br><br>
     <label>Gap Track Duration (seconds): <input type="number" id="gap-track-duration" min="0" step="0.1"></label><br><br>
     <label>Color for Tango Genre: <input type="color" id="color-tango"></label><br><br>
     <label>Color for Vals Genre: <input type="color" id="color-vals"></label><br><br>
     <label>Color for Milonga Genre: <input type="color" id="color-milonga"></label><br><br>
     <label>Color for Currently Playing Track: <input type="color" id="color-playing"></label><br><br>
+    <label>Show Total Time: <input type="checkbox" id="show-total-time" checked></label><br><br>
+    <label>Show Currently Playing Track Info: <input type="checkbox" id="show-current-info" checked></label><br><br>
     <button onclick="saveSettings()">Save</button>
     <button onclick="closeSettings()">Cancel</button>
     <button onclick="exportSettings()">Export Settings</button>
@@ -51,7 +81,11 @@
     <input type="file" id="import-file" style="display:none;" accept=".json" onchange="handleImport(event)">
 </div>
 
+
 <script>
+let playlistData = [];
+let currentPlayingIndex = -1;
+
 function formatTime(s) {
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
@@ -61,9 +95,12 @@ function formatTime(s) {
 function playTrack(button) {
     stopTrack();
     const row = button.closest('tr');
+    const index = row.rowIndex - 1;
     const audio = row.querySelector('audio');
     row.classList.add('playing');
     audio.play();
+    currentPlayingIndex = index;
+    updateCurrentInfo();
 }
 
 function stopTrack() {
@@ -72,30 +109,54 @@ function stopTrack() {
         if (audio) audio.pause();
         row.classList.remove('playing');
     });
+    currentPlayingIndex = -1;
+    updateCurrentInfo();
 }
 
 function fadeOut() {
-    const playing = document.querySelector('tr.playing audio');
-    if (playing) {
-        const duration = parseFloat(localStorage.getItem('fadeoutDuration') || '1');
-        const interval = 50;
-        const step = playing.volume / (duration * 1000 / interval);
-        const fade = setInterval(() => {
-            if (playing.volume <= step) {
-                playing.volume = 0;
-                playing.pause();
-                clearInterval(fade);
-            } else {
-                playing.volume -= step;
+    const row = document.querySelector('tr.playing');
+    if (!row) return;
+    const audio = row.querySelector('audio');
+    if (!audio) return;
+    const duration = parseFloat(localStorage.getItem('fadeoutDuration') || '1');
+    const interval = 50;
+    const step = audio.volume / (duration * 1000 / interval);
+    const fade = setInterval(() => {
+        if (audio.volume <= step) {
+            audio.volume = 0;
+            audio.pause();
+            clearInterval(fade);
+            const nextRow = row.nextElementSibling;
+            if (nextRow && nextRow.querySelector('audio')) {
+                nextRow.querySelector('button[onclick^=playTrack]').click();
             }
-        }, interval);
+        } else {
+            audio.volume -= step;
+        }
+    }, interval);
+}
+
+function updateCurrentInfo() {
+    const showInfo = JSON.parse(localStorage.getItem('showCurrentInfo') || 'true');
+    const infoElem = document.getElementById('current-track-info');
+    if (!showInfo || currentPlayingIndex < 0 || !playlistData[currentPlayingIndex]) {
+        infoElem.textContent = '';
+        return;
     }
+    const t = playlistData[currentPlayingIndex];
+    infoElem.textContent = `${t.Artist || '-'} - ${t.Title || t.Filename} - ${t.Genre || '-'} - ${t.Year || '-'}`;
+}
+
+function updateVisibilitySettings() {
+    document.getElementById('playlist-time').style.display = JSON.parse(localStorage.getItem('showTotalTime') || 'true') ? 'inline' : 'none';
+    document.getElementById('current-track-info').style.display = JSON.parse(localStorage.getItem('showCurrentInfo') || 'true') ? 'inline' : 'none';
 }
 
 function loadPlaylist() {
     fetch('/playlist')
         .then(res => res.json())
         .then(data => {
+            playlistData = data;
             const table = document.getElementById('playlist');
             table.innerHTML = `<tr><th>Index</th><th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th></tr>`;
             let totalDuration = 0;
@@ -131,6 +192,10 @@ function loadPlaylist() {
                 audio.addEventListener('timeupdate', () => {
                     const timeCell = row.querySelector('.time');
                     timeCell.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+                    const remaining = playlistData.reduce((acc, track, idx) => {
+                        if (idx > currentPlayingIndex) return acc + (track.duration || 0);
+                        return acc;
+                    }, 0);
                 });
 
                 if (showGapTracks && i < data.length - 1) {
@@ -149,17 +214,20 @@ function loadPlaylist() {
                     });
                 }
             }
+            updateVisibilitySettings();
         });
 }
 
 function openSettings() {
     document.getElementById('show-gap-tracks').checked = JSON.parse(localStorage.getItem('showGapTracks') || 'false');
-    document.getElementById('fadeout-duration').value = localStorage.getItem('fadeoutDuration') || 1;
+    document.getElementById('fadeout-duration').value = localStorage.getItem('fadeoutDuration') || 10;
     document.getElementById('gap-track-duration').value = localStorage.getItem('gapTrackDuration') || 1;
     document.getElementById('color-tango').value = localStorage.getItem('colorTango') || '#ebebeb';
     document.getElementById('color-vals').value = localStorage.getItem('colorVals') || '#c8e6c9';
     document.getElementById('color-milonga').value = localStorage.getItem('colorMilonga') || '#ffe0b2';
     document.getElementById('color-playing').value = localStorage.getItem('colorPlaying') || '#0096ff';
+    document.getElementById('show-total-time').checked = JSON.parse(localStorage.getItem('showTotalTime') || 'true');
+    document.getElementById('show-current-info').checked = JSON.parse(localStorage.getItem('showCurrentInfo') || 'true');
     document.getElementById('settings-modal').style.display = 'block';
 }
 
@@ -175,21 +243,17 @@ function saveSettings() {
     localStorage.setItem('colorVals', document.getElementById('color-vals').value);
     localStorage.setItem('colorMilonga', document.getElementById('color-milonga').value);
     localStorage.setItem('colorPlaying', document.getElementById('color-playing').value);
+    localStorage.setItem('showTotalTime', document.getElementById('show-total-time').checked);
+    localStorage.setItem('showCurrentInfo', document.getElementById('show-current-info').checked);
     applyThemeColors();
+    updateVisibilitySettings();
     closeSettings();
     loadPlaylist();
 }
 
 function exportSettings() {
-    const settings = {
-        showGapTracks: JSON.parse(localStorage.getItem('showGapTracks') || 'false'),
-        fadeoutDuration: localStorage.getItem('fadeoutDuration'),
-        gapTrackDuration: localStorage.getItem('gapTrackDuration'),
-        colorTango: localStorage.getItem('colorTango'),
-        colorVals: localStorage.getItem('colorVals'),
-        colorMilonga: localStorage.getItem('colorMilonga'),
-        colorPlaying: localStorage.getItem('colorPlaying')
-    };
+    const keys = ["showGapTracks","fadeoutDuration","gapTrackDuration","colorTango","colorVals","colorMilonga","colorPlaying","showTotalTime","showRemainingTime","showCurrentInfo"];
+    const settings = Object.fromEntries(keys.map(k => [k, localStorage.getItem(k)]));
     const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -213,6 +277,7 @@ function handleImport(event) {
             localStorage.setItem(key, settings[key]);
         }
         applyThemeColors();
+        updateVisibilitySettings();
         loadPlaylist();
         closeSettings();
     };
@@ -227,6 +292,7 @@ function applyThemeColors() {
 }
 
 applyThemeColors();
+updateVisibilitySettings();
 loadPlaylist();
 </script>
 </body>
