@@ -1,217 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>DJ server</title>
+    <meta charset="UTF-8">
+    <title>DJ Server</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            background-color: #f4f4f4;
-        }
-        h1, #now-playing, #total-time {
-            text-align: center;
-            margin-bottom: 10px;
+        body {
+            font-family: sans-serif;
+            padding: 1em;
         }
         table {
-            width: 90%;
-            margin: 0 auto;
+            width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 1em;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
-        td.title, td.artist {
-            max-width: 30%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        td.actions {
-            width: 20%;
             text-align: center;
         }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr.tango { background-color: #ebebeb; }
-        tr.vals { background-color: #c8e6c9; }
-        tr.milonga { background-color: #ffe0b2; }
-        tr.playing { background-color: #0096ff !important; font-weight: bold; }
-        button {
-            margin: 2px;
-            padding: 5px 10px;
-            border: none;
-            background-color: #1976d2;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #1565c0;
+        tr.tango { background-color: var(--color-tango, #ebebeb); }
+        tr.vals { background-color: var(--color-vals, #c8e6c9); }
+        tr.milonga { background-color: var(--color-milonga, #ffe0b2); }
+        tr.playing { background-color: var(--color-playing, #0096ff); color: white; }
+        tr.gap-track { font-style: italic; color: gray; }
+        #settings-modal {
+            display:none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+            background: #fff; padding: 20px; border: 1px solid #ccc; z-index: 1000;
         }
     </style>
 </head>
 <body>
-<h1>Music Player</h1>
+<h1>DJ Playlist</h1>
+<button onclick="openSettings()">Settings</button>
+<p>Total Playlist Time: <span id="playlist-time">00:00</span></p>
+<table id="playlist"></table>
 
-<button onclick="loadPlaylist()" style="display: block; margin: 10px auto;">Reload Playlist</button>
-
-<div id="now-playing">Now Playing: <span id="current-track">None</span></div>
-<div id="total-time">Total Playlist Time: <span id="playlist-time">--:--</span></div>
-
-<table id="playlist">
-    <tr>
-        <th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th>
-    </tr>
-</table>
+<div id="settings-modal">
+    <h2>Settings</h2>
+    <label>Show Gap Tracks: <input type="checkbox" id="show-gap-tracks"></label><br><br>
+    <label>Fadeout Duration (seconds): <input type="number" id="fadeout-duration" min="0" step="0.1"></label><br><br>
+    <label>Gap Track Duration (seconds): <input type="number" id="gap-track-duration" min="0" step="0.1"></label><br><br>
+    <label>Color for Tango Genre: <input type="color" id="color-tango"></label><br><br>
+    <label>Color for Vals Genre: <input type="color" id="color-vals"></label><br><br>
+    <label>Color for Milonga Genre: <input type="color" id="color-milonga"></label><br><br>
+    <label>Color for Currently Playing Track: <input type="color" id="color-playing"></label><br><br>
+    <button onclick="saveSettings()">Save</button>
+    <button onclick="closeSettings()">Cancel</button>
+    <button onclick="exportSettings()">Export Settings</button>
+    <button onclick="importSettings()">Import Settings</button>
+    <input type="file" id="import-file" style="display:none;" accept=".json" onchange="handleImport(event)">
+</div>
 
 <script>
-let currentAudio = null;
-let currentRow = null;
-
-async function loadPlaylist() {
-    const res = await fetch('/playlist');
-    const data = await res.json();
-
-    const table = document.getElementById('playlist');
-    table.innerHTML = `
-        <tr>
-            <th>Index</th><th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th>
-        </tr>
-    `;
-
-    let totalDuration = 0;
-
-    data.forEach(track => {
-        const row = document.createElement('tr');
-        let genreClass = '';
-        if (track.Genre && track.Genre.toLowerCase() === 'tango') genreClass = 'tango';
-        else if (track.Genre && track.Genre.toLowerCase() === 'vals') genreClass = 'vals';
-        else if (track.Genre && track.Genre.toLowerCase() === 'milonga') genreClass = 'milonga';
-        row.className = genreClass;
-
-        row.innerHTML = `
-            <td>${track.Index || '-'}</td>
-            <td class="title">${track.Title || track.Filename}</td>
-            <td class="artist">${track.Artist || '-'}</td>
-            <td>${track.Genre || '-'}</td>
-            <td>${track.Year || '-'}</td>
-            <td class="time">00:00 / --:--</td>
-            <td class="actions">
-                <button onclick="playTrack(this)">Play</button>
-                <button onclick="stopTrack()">Stop</button>
-                <button onclick="fadeOut()">Fade Out</button>
-                <audio src="/music/${track.Filename}"></audio>
-            </td>
-        `;
-        table.appendChild(row);
-
-        const audio = row.querySelector('audio');
-        audio.addEventListener('loadedmetadata', () => {
-            const durationCell = row.querySelector('.time');
-            durationCell.textContent = `00:00 / ${formatTime(audio.duration)}`;
-            totalDuration += audio.duration;
-            document.getElementById('playlist-time').textContent = formatTime(totalDuration);
-        });
-        audio.addEventListener('timeupdate', () => {
-            const timeCell = row.querySelector('.time');
-            timeCell.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-        });
-    });
+function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
 }
 
-function playTrack(btn) {
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentRow.classList.remove('playing');
-    }
-
-    const row = btn.closest('tr');
+function playTrack(button) {
+    stopTrack();
+    const row = button.closest('tr');
     const audio = row.querySelector('audio');
-    currentAudio = audio;
-    currentRow = row;
-
-    audio.volume = 1.0;
-    audio.play();
-    audio.onended = playNext;
-
     row.classList.add('playing');
-    document.getElementById('current-track').textContent = row.cells[0].textContent;
+    audio.play();
 }
 
 function stopTrack() {
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentRow.classList.remove('playing');
-        document.getElementById('current-track').textContent = 'None';
-        currentAudio = null;
-        currentRow = null;
-    }
-}
-
-function playNext() {
-    if (!currentRow) return;
-    currentRow.classList.remove('playing');
-
-    let nextRow = currentRow.nextElementSibling;
-    while (nextRow && !nextRow.querySelector('audio')) {
-        nextRow = nextRow.nextElementSibling;
-    }
-
-    if (nextRow && nextRow.querySelector('audio')) {
-        const nextAudio = nextRow.querySelector('audio');
-        currentAudio = nextAudio;
-        currentRow = nextRow;
-        nextAudio.volume = 1.0;
-        nextAudio.play();
-        nextAudio.onended = playNext;
-
-        nextRow.classList.add('playing');
-        document.getElementById('current-track').textContent = nextRow.cells[0].textContent;
-    } else {
-        document.getElementById('current-track').textContent = 'None';
-        currentAudio = null;
-        currentRow = null;
-    }
+    document.querySelectorAll('tr.playing').forEach(row => {
+        const audio = row.querySelector('audio');
+        if (audio) audio.pause();
+        row.classList.remove('playing');
+    });
 }
 
 function fadeOut() {
-    if (!currentAudio) return;
-    const step = 0.01;
-    const interval = 100;
-    // fade out duration is calculated from step and interval as following
-    // duration = (1 / 0.01) × 100 ms = 100 × 100 = 10,000 ms = 10 seconds
-    const fade = setInterval(() => {
-        if (currentAudio.volume > step) {
-            currentAudio.volume -= step;
-        } else {
-            clearInterval(fade);
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-            currentRow.classList.remove('playing');
-            playNext();
+    const playing = document.querySelector('tr.playing audio');
+    if (playing) {
+        const duration = parseFloat(localStorage.getItem('fadeoutDuration') || '1');
+        const interval = 50;
+        const step = playing.volume / (duration * 1000 / interval);
+        const fade = setInterval(() => {
+            if (playing.volume <= step) {
+                playing.volume = 0;
+                playing.pause();
+                clearInterval(fade);
+            } else {
+                playing.volume -= step;
+            }
+        }, interval);
+    }
+}
+
+function loadPlaylist() {
+    fetch('/playlist')
+        .then(res => res.json())
+        .then(data => {
+            const table = document.getElementById('playlist');
+            table.innerHTML = `<tr><th>Index</th><th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Time</th><th>Actions</th></tr>`;
+            let totalDuration = 0;
+            const showGapTracks = JSON.parse(localStorage.getItem('showGapTracks') || 'false');
+            const gapTrackDuration = parseFloat(localStorage.getItem('gapTrackDuration') || '1');
+
+            for (let i = 0; i < data.length; i++) {
+                const track = data[i];
+                const row = document.createElement('tr');
+                const genre = (track.Genre || '').toLowerCase();
+                row.className = genre;
+                row.innerHTML = `
+                    <td>${track.Index || '-'}</td>
+                    <td class="title">${track.Title || track.Filename}</td>
+                    <td class="artist">${track.Artist || '-'}</td>
+                    <td>${track.Genre || '-'}</td>
+                    <td>${track.Year || '-'}</td>
+                    <td class="time">00:00 / --:--</td>
+                    <td class="actions">
+                        <button onclick="playTrack(this)">▶️</button>
+                        <button onclick="stopTrack()">⏹️</button>
+                        <button onclick="fadeOut()">⏬</button>
+                        <audio src="/music/${track.Filename}"></audio>
+                    </td>`;
+                table.appendChild(row);
+
+                const audio = row.querySelector('audio');
+                audio.addEventListener('loadedmetadata', () => {
+                    row.querySelector('.time').textContent = `00:00 / ${formatTime(audio.duration)}`;
+                    totalDuration += audio.duration;
+                    document.getElementById('playlist-time').textContent = formatTime(totalDuration);
+                });
+                audio.addEventListener('timeupdate', () => {
+                    const timeCell = row.querySelector('.time');
+                    timeCell.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+                });
+
+                if (showGapTracks && i < data.length - 1) {
+                    const gapRow = document.createElement('tr');
+                    gapRow.className = 'gap-track';
+                    gapRow.innerHTML = `
+                        <td colspan="6">Gap</td>
+                        <td class="actions"><audio></audio></td>`;
+                    table.appendChild(gapRow);
+
+                    const gapAudio = gapRow.querySelector('audio');
+                    gapAudio.src = `data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=`;
+                    gapAudio.addEventListener('loadedmetadata', () => {
+                        totalDuration += gapTrackDuration;
+                        document.getElementById('playlist-time').textContent = formatTime(totalDuration);
+                    });
+                }
+            }
+        });
+}
+
+function openSettings() {
+    document.getElementById('show-gap-tracks').checked = JSON.parse(localStorage.getItem('showGapTracks') || 'false');
+    document.getElementById('fadeout-duration').value = localStorage.getItem('fadeoutDuration') || 1;
+    document.getElementById('gap-track-duration').value = localStorage.getItem('gapTrackDuration') || 1;
+    document.getElementById('color-tango').value = localStorage.getItem('colorTango') || '#ebebeb';
+    document.getElementById('color-vals').value = localStorage.getItem('colorVals') || '#c8e6c9';
+    document.getElementById('color-milonga').value = localStorage.getItem('colorMilonga') || '#ffe0b2';
+    document.getElementById('color-playing').value = localStorage.getItem('colorPlaying') || '#0096ff';
+    document.getElementById('settings-modal').style.display = 'block';
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function saveSettings() {
+    localStorage.setItem('showGapTracks', document.getElementById('show-gap-tracks').checked);
+    localStorage.setItem('fadeoutDuration', document.getElementById('fadeout-duration').value);
+    localStorage.setItem('gapTrackDuration', document.getElementById('gap-track-duration').value);
+    localStorage.setItem('colorTango', document.getElementById('color-tango').value);
+    localStorage.setItem('colorVals', document.getElementById('color-vals').value);
+    localStorage.setItem('colorMilonga', document.getElementById('color-milonga').value);
+    localStorage.setItem('colorPlaying', document.getElementById('color-playing').value);
+    applyThemeColors();
+    closeSettings();
+    loadPlaylist();
+}
+
+function exportSettings() {
+    const settings = {
+        showGapTracks: JSON.parse(localStorage.getItem('showGapTracks') || 'false'),
+        fadeoutDuration: localStorage.getItem('fadeoutDuration'),
+        gapTrackDuration: localStorage.getItem('gapTrackDuration'),
+        colorTango: localStorage.getItem('colorTango'),
+        colorVals: localStorage.getItem('colorVals'),
+        colorMilonga: localStorage.getItem('colorMilonga'),
+        colorPlaying: localStorage.getItem('colorPlaying')
+    };
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'djserver-settings.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importSettings() {
+    document.getElementById('import-file').click();
+}
+
+function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const settings = JSON.parse(e.target.result);
+        for (const key in settings) {
+            localStorage.setItem(key, settings[key]);
         }
-    }, interval);
+        applyThemeColors();
+        loadPlaylist();
+        closeSettings();
+    };
+    reader.readAsText(file);
 }
 
-function formatTime(seconds) {
-    if (isNaN(seconds)) return '--:--';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+function applyThemeColors() {
+    document.documentElement.style.setProperty('--color-tango', localStorage.getItem('colorTango') || '#ebebeb');
+    document.documentElement.style.setProperty('--color-vals', localStorage.getItem('colorVals') || '#c8e6c9');
+    document.documentElement.style.setProperty('--color-milonga', localStorage.getItem('colorMilonga') || '#ffe0b2');
+    document.documentElement.style.setProperty('--color-playing', localStorage.getItem('colorPlaying') || '#0096ff');
 }
 
-window.onload = loadPlaylist;
+applyThemeColors();
+loadPlaylist();
 </script>
-
 </body>
 </html>
-
