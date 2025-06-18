@@ -1,4 +1,4 @@
-# 🎶 updateiTunes
+# updateiTunes
 
 `updateiTunes` is a command-line utility written in Go that syncs your iTunes
 music library with detailed metadata from tango (or other genre) discography
