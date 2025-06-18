@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -33,7 +33,7 @@ func MatchTracks(files []string, discography []Track, mode MatchMode, verbose in
 			matchKey := strings.ToLower(track.Name)
 			if mode == Strict && name == matchKey {
 				if verbose > 1 {
-					log.Printf("strict mode: file '%s' match key '%s' track %+v\n", name, matchKey, track)
+					fmt.Printf("strict mode: file '%s' match key '%s' track %+v\n", name, matchKey, track)
 				}
 				bestMatch = &track
 				break
@@ -44,7 +44,7 @@ func MatchTracks(files []string, discography []Track, mode MatchMode, verbose in
 				if bestMatch == nil {
 					if mfold && rfold < 30 || mfold && matchStr {
 						if verbose > 1 {
-							log.Printf("fuzzy mode: file '%s' match fold %v rank fold %v track %+v\n", name, mfold, rfold, track)
+							fmt.Printf("fuzzy mode: file '%s' match fold %v rank fold %v track %+v\n", name, mfold, rfold, track)
 						}
 						bestMatch = &track
 					}

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"testing"
 
@@ -26,7 +26,7 @@ func TestUpdateTagsWithRealMP3(t *testing.T) {
 	defer os.Remove(tmpFile.Name()) // clean up after test
 
 	// Copy data from test.mp3 to temp file
-	log.Printf("Copy %s to %s, sleep 1sec", srcName, tmpFile.Name())
+	fmt.Printf("Copy %s to %s, sleep 1sec\n", srcName, tmpFile.Name())
 	if _, err := io.Copy(tmpFile, srcFile); err != nil {
 		t.Fatalf("failed to copy MP3 data to temp file: %v", err)
 	}
@@ -44,7 +44,9 @@ func TestUpdateTagsWithRealMP3(t *testing.T) {
 	}
 
 	// Step 4: Update tags
-	err = UpdateTags("Test Orchestra", tmpFile.Name(), &track, false, 3)
+	fixTitle := true
+	dryRun := false
+	err = UpdateTags("Test Orchestra", tmpFile.Name(), &track, fixTitle, dryRun, 3)
 	if err != nil {
 		t.Fatalf("UpdateTags failed: %v", err)
 	}

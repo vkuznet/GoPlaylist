@@ -11,7 +11,7 @@ import (
 
 func main() {
 	var xmlPattern, musicDir, orchestra, matchMode string
-	var dryRun bool
+	var dryRun, fixTitle bool
 	var verbose int
 	flag.StringVar(&xmlPattern, "xml", "*.xml", "Glob pattern for XML discography files")
 	mdir := fmt.Sprintf("%s/Music/iTunes/iTunes Music", os.Getenv("HOME"))
@@ -20,6 +20,7 @@ func main() {
 	flag.BoolVar(&dryRun, "dryRun", false, "If set, tags won't be written to files")
 	flag.IntVar(&verbose, "verbose", 0, "verbose mode")
 	flag.StringVar(&matchMode, "matchMode", "strict", "Match mode: strict or fuzzy")
+	flag.BoolVar(&fixTitle, "fixTitle", false, "If set, titles of songs will be fixde accodring to discography")
 
 	flag.Parse()
 
@@ -28,7 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse XML: %v", err)
 	}
-	log.Printf("Found %d tracks in %s", len(tracks), xmlPattern)
+	fmt.Printf("Found %d tracks in %s\n", len(tracks), xmlPattern)
 
 	if orchestra == "" {
 		log.Fatalln("no orchestra is provided")
@@ -48,18 +49,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to scan music directory: %v", err)
 	}
-	log.Printf("Found %d files in %s", len(files), musicDir)
+	fmt.Printf("Found %d files in %s\n", len(files), musicDir)
 
 	// Perform matching
 	matches := MatchTracks(files, tracks, MatchMode(matchMode), verbose)
-	log.Printf("Found %d matches", len(matches))
+	fmt.Printf("Found %d matches\n", len(matches))
 
 	// Process results
 	for _, match := range matches {
-		log.Printf("Matched: %s <-> %s\n", match.Track.Name, match.FilePath)
-		err := UpdateTags(orchestra, match.FilePath, match.Track, dryRun, verbose)
+		fmt.Printf("Matched: %s <-> %s\n", match.Track.Name, match.FilePath)
+		err := UpdateTags(orchestra, match.FilePath, match.Track, fixTitle, dryRun, verbose)
 		if err != nil {
-			log.Printf("Error updating tags for %s: %v", match.FilePath, err)
+			fmt.Printf("Error updating tags for %s: %v\n", match.FilePath, err)
 		}
 	}
 }
