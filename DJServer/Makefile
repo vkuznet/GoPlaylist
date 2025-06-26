@@ -1,5 +1,5 @@
-GOARCHS=amd64 arm64 ppc64le
-GOOSES=linux darwin windows freebsd
+GOARCHS=amd64 arm64
+GOOSES=linux darwin windows
 
 all: build
 
@@ -10,7 +10,7 @@ build_all:
 	@for GOARCH in $(GOARCHS); do \
 		for GOOS in $(GOOSES); do \
 			echo "Building for $$GOOS/$$GOARCH"; \
-			GOOS=$$GOOS GOARCH=$$GOARCH go build -o bin/DJserver-$GOOS-$$GOARCH main.go; \
+			GOOS=$$GOOS GOARCH=$$GOARCH go build -o bin/DJserver-$$GOOS-$$GOARCH main.go; \
 		done \
 	done
 
